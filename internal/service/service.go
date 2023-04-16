@@ -11,34 +11,10 @@ type Service struct {
 	Users
 }
 
-type Users interface {
-	Create(models.User) error
-	Get(email, name string) (models.User, error)
-}
-
-func NewService(r *repository.Repository) *Service {
+func New(r *repository.Repos) *Service {
 	return &Service{
-		NewUserService(r.Users),
+		Users: NewUserService(r),
 	}
-}
-
-type UserService struct {
-	repository.Users
-}
-
-func NewUserService(r repository.Users) Users {
-	return &UserService{r}
-}
-
-func (u *UserService) Create(m models.User) error {
-	PasswordCrypt(&m)
-	u.Users.Create(m)
-	return nil
-}
-
-func (u *UserService) Get(email, name string) (models.User, error) {
-	m, err := u.Users.Get(email, name)
-	return m, err
 }
 
 func PasswordCrypt(m *models.User) {

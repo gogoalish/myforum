@@ -8,7 +8,6 @@ import (
 
 	"forum/internal/controller"
 	"forum/internal/repository"
-	"forum/internal/service"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -16,25 +15,25 @@ import (
 const PORT = ":8080"
 
 func Run() {
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	DB, _ := sql.Open("sqlite3", "forum.db")
 	defer DB.Close()
-	repo := repository.NewRepository(DB)
-	service := service.NewService(repo)
-	handler := &controller.Handler{ErrorLog: errorLog, Service: service}
-	err := repository.CreateDB(DB)
+
+	handler, err := controller.NewHandler(errorLog, DB)
 	if err != nil {
-		errorLog.Println(err)
-		return
+		errorLog.Fatal(err)
+	}
+	err = repository.Create(DB)
+	if err != nil {
+		errorLog.Fatal(err)
 	}
 	srv := &http.Server{
 		Addr:     PORT,
 		ErrorLog: errorLog,
 		Handler:  controller.Routes(handler),
 	}
-	infoLog.Printf("listening on http://localhost" + PORT)
+	log.Printf("listening on http://localhost" + PORT + "/signup")
 	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
