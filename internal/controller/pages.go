@@ -24,12 +24,29 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 			Name:     r.FormValue("name"),
 			Password: r.FormValue("password"),
 		}
-		h.Service.SignUp(form)
-		user, err := h.Service.Get(form.Email, form.Name)
+		err := h.Service.SignUp(form)
 		if err != nil {
 			h.ErrorLog.Println(err)
-			return
 		}
-		log.Printf("user created id %d email: %s, name: %s, password: %s", user.ID, user.Email, user.Name, user.Password)
+		log.Printf("user created email: %s, name: %s, password: %s", form.Email, form.Name, form.Password)
+	}
+}
+
+func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		err := h.Tempcache.ExecuteTemplate(w, "signin.html", nil)
+		if err != nil {
+			h.ErrorLog.Println(err)
+		}
+	case http.MethodPost:
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+		user, err := h.Service.SignIn(email, password)
+		if err != nil {
+			h.ErrorLog.Println(err)
+		}
+		log.Println(user)
+		// http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }

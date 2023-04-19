@@ -7,7 +7,8 @@ func Create(DB *sql.DB) error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		email TEXT NOT NULL,
 		name TEXT NOT NULL,
-		password TEXT NOT NULL
+		password TEXT NOT NULL,
+		token TEXT
 		);`
 	_, err := DB.Exec(query)
 	return err

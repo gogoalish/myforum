@@ -2,13 +2,14 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 
 	"forum/internal/models"
 )
 
 type Users interface {
 	SignUp(models.User) error
-	Get(email, name string) (models.User, error)
+	SignIn(email string) (models.User, error)
 }
 
 type UserRepo struct {
@@ -28,10 +29,13 @@ func (u *UserRepo) SignUp(m models.User) error {
 	return nil
 }
 
-func (u *UserRepo) Get(email, name string) (models.User, error) {
+func (u *UserRepo) SignIn(email string) (models.User, error) {
 	query := `SELECT * FROM users
-	WHERE ? = email AND ? = name`
+	WHERE ? = email`
 	var user models.User
-	err := u.QueryRow(query, email, name).Scan(&user.ID, &user.Email, &user.Name, &user.Password)
+	err := u.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token)
+	if errors.Is(err, sql.ErrNoRows) {
+		return user, models.ErrNoRecord
+	}
 	return user, err
 }

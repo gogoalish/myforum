@@ -30,6 +30,7 @@ func Routes(h *Handler) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", h.homepage)
 	mux.HandleFunc("/signup", h.signup)
+	mux.HandleFunc("/signin", h.signin)
 	return middleware.SecureHeaders(mux)
 }
 

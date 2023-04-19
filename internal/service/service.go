@@ -11,13 +11,13 @@ type Service struct {
 	Users
 }
 
-func New(r *repository.Repos) *Service {
+func New(r *repository.Repo) *Service {
 	return &Service{
 		Users: NewUserService(r),
 	}
 }
 
-func PasswordCrypt(m *models.User) {
+func Encrypt(m *models.User) {
 	password := []byte(m.Password)
 	crypted, _ := bcrypt.GenerateFromPassword(password, 3)
 	m.Password = string(crypted)
