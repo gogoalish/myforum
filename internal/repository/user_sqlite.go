@@ -9,7 +9,9 @@ import (
 
 type Users interface {
 	SignUp(models.User) error
-	SignIn(email string) (models.User, error)
+	UserByEmail(email string) (models.User, error)
+	UserByToken(token string) (models.User, error)
+	SetToken(id int, token string) error
 }
 
 type UserRepo struct {
@@ -29,11 +31,32 @@ func (u *UserRepo) SignUp(m models.User) error {
 	return nil
 }
 
-func (u *UserRepo) SignIn(email string) (models.User, error) {
+func (u *UserRepo) UserByEmail(email string) (models.User, error) {
 	query := `SELECT * FROM users
 	WHERE ? = email`
 	var user models.User
 	err := u.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token)
+	if errors.Is(err, sql.ErrNoRows) {
+		return user, models.ErrNoRecord
+	}
+	return user, err
+}
+
+func (u *UserRepo) SetToken(id int, token string) error {
+	query := `UPDATE users
+	SET token = ?
+	WHERE ? = id`
+	if _, err := u.Exec(query, token, id); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepo) UserByToken(token string) (models.User, error) {
+	query := `SELECT * FROM users
+	WHERE ? = token`
+	var user models.User
+	err := u.QueryRow(query, token).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token)
 	if errors.Is(err, sql.ErrNoRows) {
 		return user, models.ErrNoRecord
 	}

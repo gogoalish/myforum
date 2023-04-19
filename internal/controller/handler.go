@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"runtime/debug"
 
-	"forum/internal/middleware"
 	"forum/internal/repository"
 	"forum/internal/service"
 )
@@ -31,7 +30,7 @@ func Routes(h *Handler) http.Handler {
 	mux.HandleFunc("/", h.homepage)
 	mux.HandleFunc("/signup", h.signup)
 	mux.HandleFunc("/signin", h.signin)
-	return middleware.SecureHeaders(mux)
+	return SecureHeaders(mux)
 }
 
 func Newtscache() (map[string]*template.Template, error) {

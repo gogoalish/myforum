@@ -46,7 +46,14 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			h.ErrorLog.Println(err)
 		}
+		cookie := &http.Cookie{
+			Name:  "session",
+			Value: *user.Token,
+		}
+		http.SetCookie(w, cookie)
 		log.Println(user)
-		// http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
+}
+
+func (h *Handler) logout(w http.ResponseWriter, r http.Request) {
 }
