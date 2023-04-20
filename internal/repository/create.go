@@ -5,10 +5,11 @@ import "database/sql"
 func Create(DB *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			email TEXT NOT NULL,
+			email TEXT NOT NULL UNIQUE,
 			name TEXT NOT NULL,
 			password TEXT NOT NULL,
-			token TEXT
+			token TEXT,
+			expires DATETIME
 		);
 		CREATE TABLE IF NOT EXISTS posts (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,

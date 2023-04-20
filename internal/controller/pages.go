@@ -30,6 +30,7 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 			h.ErrorLog.Println(err)
 		}
 		log.Printf("user created email: %s, name: %s, password: %s", form.Email, form.Name, form.Password)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
@@ -39,6 +40,7 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 		err := h.Tempcache.ExecuteTemplate(w, "signin.html", nil)
 		if err != nil {
 			h.ErrorLog.Println(err)
+			return
 		}
 	case http.MethodPost:
 		email := r.FormValue("email")
@@ -46,6 +48,7 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 		user, err := h.Service.SignIn(email, password)
 		if err != nil {
 			h.ErrorLog.Println(err)
+			return
 		}
 		cookie := &http.Cookie{
 			Name:  "session",
@@ -54,6 +57,14 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, cookie)
 		log.Println(user)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(models.User)
+	err := h.Service.LogOut(*user.Token)
+	if err != nil {
+		h.ErrorLog.Println(err)
 	}
 }
 

@@ -12,6 +12,7 @@ type Users interface {
 	SignUp(models.User) error
 	SignIn(email, password string) (models.User, error)
 	UserByToken(token string) (models.User, error)
+	LogOut(token string) error
 }
 
 type UserService struct {
@@ -50,4 +51,9 @@ func (u *UserService) SignIn(email, password string) (models.User, error) {
 func (u *UserService) UserByToken(token string) (models.User, error) {
 	user, err := u.repo.UserByToken(token)
 	return user, err
+}
+
+func (u *UserService) LogOut(token string) error {
+	err := u.repo.RemoveToken(token)
+	return err
 }

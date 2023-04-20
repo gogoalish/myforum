@@ -12,6 +12,7 @@ type Users interface {
 	UserByEmail(email string) (models.User, error)
 	UserByToken(token string) (models.User, error)
 	SetToken(id int, token string) error
+	RemoveToken(token string) error
 }
 
 type UserRepo struct {
@@ -35,7 +36,7 @@ func (u *UserRepo) UserByEmail(email string) (models.User, error) {
 	query := `SELECT * FROM users
 	WHERE ? = email`
 	var user models.User
-	err := u.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token)
+	err := u.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token, &user.Expires)
 	if errors.Is(err, sql.ErrNoRows) {
 		return user, models.ErrNoRecord
 	}
@@ -44,7 +45,7 @@ func (u *UserRepo) UserByEmail(email string) (models.User, error) {
 
 func (u *UserRepo) SetToken(id int, token string) error {
 	query := `UPDATE users
-	SET token = ?
+	SET token = ?, expires = DATETIME('now', '+8 hours')
 	WHERE ? = id`
 	if _, err := u.Exec(query, token, id); err != nil {
 		return err
@@ -54,11 +55,19 @@ func (u *UserRepo) SetToken(id int, token string) error {
 
 func (u *UserRepo) UserByToken(token string) (models.User, error) {
 	query := `SELECT * FROM users
-	WHERE ? = token`
+	WHERE ? = token AND expires > DATETIME('now')`
 	var user models.User
-	err := u.QueryRow(query, token).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token)
+	err := u.QueryRow(query, token).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token, &user.Expires)
 	if errors.Is(err, sql.ErrNoRows) {
 		return user, models.ErrNoRecord
 	}
 	return user, err
+}
+
+func (u *UserRepo) RemoveToken(token string) error {
+	query := `UPDATE users
+	SET token = NULL
+	WHERE token = ?`
+	_, err := u.Exec(query, token)
+	return err
 }

@@ -31,6 +31,7 @@ func Routes(h *Handler) http.Handler {
 	mux.HandleFunc("/signup", h.signup)
 	mux.HandleFunc("/signin", h.signin)
 	mux.HandleFunc("/create", h.CheckAuth(h.create))
+	mux.HandleFunc("/logout", h.CheckAuth(h.logout))
 	return SecureHeaders(mux)
 }
 

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"forum/internal/models"
@@ -30,8 +29,7 @@ func (h *Handler) CheckAuth(next http.HandlerFunc) http.HandlerFunc {
 		token := cookie.Value
 		user, err := h.Service.UserByToken(token)
 		if err == models.ErrNoRecord || *user.Token != token {
-			fmt.Println(err == models.ErrNoRecord, *user.Token == token)
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 		ctx := context.WithValue(r.Context(), "user", user)
