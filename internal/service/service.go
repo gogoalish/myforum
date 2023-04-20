@@ -9,11 +9,13 @@ import (
 
 type Service struct {
 	Users
+	Posts
 }
 
 func New(r *repository.Repo) *Service {
 	return &Service{
 		Users: NewUserService(r),
+		Posts: &PostService{r.Posts},
 	}
 }
 

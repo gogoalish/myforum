@@ -8,7 +8,8 @@ import (
 )
 
 func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
-	h.Tempcache.ExecuteTemplate(w, "index.html", nil)
+	posts, _ := h.Service.All()
+	h.Tempcache.ExecuteTemplate(w, "index.html", posts)
 }
 
 func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
@@ -52,8 +53,21 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 		}
 		http.SetCookie(w, cookie)
 		log.Println(user)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
-func (h *Handler) logout(w http.ResponseWriter, r http.Request) {
+func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		err := h.Tempcache.ExecuteTemplate(w, "create.html", nil)
+		if err != nil {
+			h.ErrorLog.Println(err)
+		}
+	case http.MethodPost:
+		title := r.FormValue("title")
+		content := r.FormValue("content")
+		user := r.Context().Value("user").(models.User)
+		h.Service.Create(user.ID, title, content)
+	}
 }
