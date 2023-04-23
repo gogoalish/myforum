@@ -7,11 +7,23 @@ import (
 	"forum/internal/models"
 )
 
-type TemplateData struct{}
+type TemplateData struct {
+	Data         any
+	IsAuthorized bool
+}
 
 func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
-	posts, _ := h.Service.All()
-	h.Tempcache.ExecuteTemplate(w, "index.html", posts)
+	posts, err := h.Service.Posts.GetAll()
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+	data := &TemplateData{posts, false}
+	user := r.Context().Value("user").(models.User)
+	if user.Token != nil {
+		data.IsAuthorized = true
+	}
+	h.templaterender(w, http.StatusOK, "index.html", data)
 }
 
 func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +75,6 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 			Value: *user.Token,
 		}
 		http.SetCookie(w, cookie)
-		log.Println(user)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
@@ -74,4 +85,5 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.ErrorLog.Println(err)
 	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

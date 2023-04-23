@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"forum/internal/models"
@@ -22,18 +23,20 @@ func SecureHeaders(next http.Handler) http.Handler {
 func (h *Handler) CheckAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
-		if err != nil {
+		var user models.User
+		switch err {
+		case http.ErrNoCookie:
+			user = models.User{}
+		case nil:
+			user, err = h.Service.UserByToken(cookie.Value)
+			if err != nil {
+				fmt.Printf("user by token: %s\n", err)
+			}
+		default:
 			h.ErrorLog.Println(err)
 			return
 		}
-		token := cookie.Value
-		user, err := h.Service.UserByToken(token)
-		if err == models.ErrNoRecord || *user.Token != token {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
 		ctx := context.WithValue(r.Context(), "user", user)
-		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }

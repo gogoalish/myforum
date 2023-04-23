@@ -10,11 +10,11 @@ type PostService struct {
 }
 
 type Posts interface {
-	All() ([]*models.Post, error)
+	GetAll() ([]*models.Post, error)
 	Create(UserID int, title, content string) error
 }
 
-func (p *PostService) All() ([]*models.Post, error) {
+func (p *PostService) GetAll() ([]*models.Post, error) {
 	posts, err := p.repo.All()
 	return posts, err
 }

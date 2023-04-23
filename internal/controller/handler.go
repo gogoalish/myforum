@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bytes"
 	"database/sql"
 	"html/template"
 	"log"
@@ -27,7 +28,7 @@ func NewHandler(logger *log.Logger, DB *sql.DB) (*Handler, error) {
 
 func Routes(h *Handler) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", h.homepage)
+	mux.HandleFunc("/", h.CheckAuth(h.homepage))
 	mux.HandleFunc("/signup", h.signup)
 	mux.HandleFunc("/signin", h.signin)
 	mux.HandleFunc("/create", h.CheckAuth(h.create))
@@ -52,25 +53,19 @@ func Newtscache() (map[string]*template.Template, error) {
 	return cache, nil
 }
 
-// func (h *Handler) render(w http.ResponseWriter, status int, page string, data string) {
-// 	ts, ok := h.Tempcache[page]
-// 	if !ok {
-// 		err := fmt.Errorf("the template %s does not exist", page)
-// 		h.serverError(w, err)
-// 		return
-// 	}
-// 	buf := new(bytes.Buffer)
-// 	err := ts.ExecuteTemplate(buf, "index", data)
-// 	if err != nil {
-// 		h.serverError(w, err)
-// 		return
-// 	}
-// 	w.WriteHeader(status)
-// 	buf.WriteTo(w)
-// }
+func (h *Handler) templaterender(w http.ResponseWriter, status int, page string, data any) {
+	buf := new(bytes.Buffer)
+	err := h.Tempcache.ExecuteTemplate(buf, page, data)
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+	w.WriteHeader(status)
+	buf.WriteTo(w)
+}
 
-func (app *Handler) serverError(w http.ResponseWriter, err error) {
-	log.Printf("%s\n%s", err.Error(), debug.Stack())
+func (h *Handler) serverError(w http.ResponseWriter, err error) {
+	h.ErrorLog.Printf("%s\n%s", err.Error(), debug.Stack())
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 }
 
