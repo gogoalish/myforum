@@ -9,7 +9,7 @@ type Repo struct {
 
 func New(db *sql.DB) *Repo {
 	return &Repo{
-		Users: NewUserRepo(db),
+		Users: &UserRepo{db},
 		Posts: &PostRepo{db},
 	}
 }

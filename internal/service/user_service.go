@@ -19,10 +19,6 @@ type UserService struct {
 	repo repository.Users
 }
 
-func NewUserService(r *repository.Repo) Users {
-	return &UserService{r.Users}
-}
-
 func (u *UserService) SignUp(m models.User) error {
 	Encrypt(&m)
 	u.repo.SignUp(m)

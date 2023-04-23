@@ -7,6 +7,8 @@ import (
 	"forum/internal/models"
 )
 
+type TemplateData struct{}
+
 func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
 	posts, _ := h.Service.All()
 	h.Tempcache.ExecuteTemplate(w, "index.html", posts)
@@ -20,12 +22,18 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 			h.ErrorLog.Println(err)
 		}
 	case http.MethodPost:
-		form := models.User{
-			Email:    r.FormValue("email"),
-			Name:     r.FormValue("name"),
-			Password: r.FormValue("password"),
+		err := r.ParseForm()
+		if err != nil {
+			h.ErrorLog.Println(err)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
 		}
-		err := h.Service.SignUp(form)
+		form := models.User{
+			Email:    r.PostForm.Get("email"),
+			Name:     r.PostForm.Get("name"),
+			Password: r.PostForm.Get("password"),
+		}
+		err = h.Service.SignUp(form)
 		if err != nil {
 			h.ErrorLog.Println(err)
 		}
@@ -65,20 +73,5 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
 	err := h.Service.LogOut(*user.Token)
 	if err != nil {
 		h.ErrorLog.Println(err)
-	}
-}
-
-func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		err := h.Tempcache.ExecuteTemplate(w, "create.html", nil)
-		if err != nil {
-			h.ErrorLog.Println(err)
-		}
-	case http.MethodPost:
-		title := r.FormValue("title")
-		content := r.FormValue("content")
-		user := r.Context().Value("user").(models.User)
-		h.Service.Create(user.ID, title, content)
 	}
 }

@@ -11,6 +11,7 @@ type Users interface {
 	SignUp(models.User) error
 	UserByEmail(email string) (models.User, error)
 	UserByToken(token string) (models.User, error)
+	UserById(id int) (models.User, error)
 	SetToken(id int, token string) error
 	RemoveToken(token string) error
 }
@@ -43,16 +44,6 @@ func (u *UserRepo) UserByEmail(email string) (models.User, error) {
 	return user, err
 }
 
-func (u *UserRepo) SetToken(id int, token string) error {
-	query := `UPDATE users
-	SET token = ?, expires = DATETIME('now', '+8 hours')
-	WHERE ? = id`
-	if _, err := u.Exec(query, token, id); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (u *UserRepo) UserByToken(token string) (models.User, error) {
 	query := `SELECT * FROM users
 	WHERE ? = token AND expires > DATETIME('now')`
@@ -62,6 +53,27 @@ func (u *UserRepo) UserByToken(token string) (models.User, error) {
 		return user, models.ErrNoRecord
 	}
 	return user, err
+}
+
+func (u *UserRepo) UserById(id int) (models.User, error) {
+	query := `SELECT * FROM users
+	WHERE id = ?`
+	user := models.User{}
+	err := u.QueryRow(query, id).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token, &user.Expires)
+	if errors.Is(err, sql.ErrNoRows) {
+		return user, models.ErrNoRecord
+	}
+	return user, err
+}
+
+func (u *UserRepo) SetToken(id int, token string) error {
+	query := `UPDATE users
+	SET token = ?, expires = DATETIME('now', '+8 hours')
+	WHERE ? = id` // expiration datetime = now + 2 hours
+	if _, err := u.Exec(query, token, id); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *UserRepo) RemoveToken(token string) error {
