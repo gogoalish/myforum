@@ -1,10 +1,7 @@
 package service
 
 import (
-	"forum/internal/models"
 	"forum/internal/repository"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
@@ -17,10 +14,4 @@ func New(r *repository.Repo) *Service {
 		Users: &UserService{r.Users},
 		Posts: &PostService{r.Posts},
 	}
-}
-
-func Encrypt(m *models.User) {
-	password := []byte(m.Password)
-	crypted, _ := bcrypt.GenerateFromPassword(password, 3)
-	m.Password = string(crypted)
 }

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,8 +9,23 @@
 
 <body>
     <form action="/signup" method="POST">
-        <input type="text" name="email">
-        <input type="text" name="name">
+        {{with .ErrMsgs}}
+            {{with .email}}
+            <label>{{.}}</label>
+            {{end}}
+        {{end}}
+        <input type="text" name="email" value="{{if .Content}}{{.Content.Email}}{{end}}">
+
+        {{with .ErrMsgs.name}}
+            <label>{{.}}</label>
+        {{end}}
+        <input type="text" name="name" value="{{if .Content}}{{.Content.Name}}{{end}}">
+        
+        {{with .ErrMsgs}}
+            {{with .password}}
+            <label>{{.}}</label>
+            {{end}}
+        {{end}}
         <input type="text" name="password">
         <input type="submit">
     </form>

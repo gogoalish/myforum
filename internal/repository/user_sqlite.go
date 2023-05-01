@@ -47,7 +47,7 @@ func (u *UserRepo) UserByEmail(email string) (models.User, error) {
 
 func (u *UserRepo) UserByName(name string) (models.User, error) {
 	query := `SELECT * FROM users
-	WHERE ? = email`
+	WHERE ? = name`
 	var user models.User
 	err := u.QueryRow(query, name).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token, &user.Expires)
 	if errors.Is(err, sql.ErrNoRows) {

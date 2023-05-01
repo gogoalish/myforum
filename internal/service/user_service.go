@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"forum/internal/hasher"
 	"forum/internal/models"
 	"forum/internal/repository"
 
@@ -24,20 +25,23 @@ type UserService struct {
 
 func (u *UserService) SignUp(m models.User) error {
 	user, err := u.repo.UserByEmail(m.Email)
-	if !errors.Is(err, models.ErrNoRecord) {
-		return fmt.Errorf("userservice error #1: %w", err)
+	if err != nil && !errors.Is(err, models.ErrNoRecord) {
+		return fmt.Errorf("userservice #1: %w", err)
 	}
 	if user.Email == m.Email {
 		return models.ErrDuplicateEmail
 	}
 	user, err = u.repo.UserByName(m.Name)
-	if !errors.Is(err, models.ErrNoRecord) {
-		return fmt.Errorf("userservice error #2: %w", err)
+	if err != nil && !errors.Is(err, models.ErrNoRecord) {
+		return fmt.Errorf("userservice #2: %w", err)
 	}
 	if user.Name == m.Name {
 		return models.ErrDuplicateName
 	}
-	Encrypt(&m)
+	m.Password, err = hasher.Encrypt(m.Password)
+	if err != nil {
+		return fmt.Errorf("userservice #3: %w", err)
+	}
 	u.repo.SignUp(m)
 	return nil
 }

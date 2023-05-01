@@ -4,13 +4,14 @@ import (
 	"net/http"
 
 	"forum/internal/models"
+	"forum/internal/validator"
 )
 
 type Data struct {
 	User         models.User
 	Content      any
 	IsAuthorized bool
-	Validator    map[string]string
+	ErrMsgs      map[string]string
 }
 
 type ErrorData struct {
@@ -39,6 +40,7 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 		data := r.Context().Value(ctxKey).(*Data)
 		h.templaterender(w, http.StatusOK, "signup.html", data)
 	case http.MethodPost:
+		data := r.Context().Value(ctxKey).(*Data)
 		err := r.ParseForm()
 		if err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)
@@ -49,9 +51,27 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 			Name:     r.PostForm.Get("name"),
 			Password: r.PostForm.Get("password"),
 		}
+		data.Content = form
+		data.ErrMsgs = validator.GetErrMsgs(form)
+		valid := len(data.ErrMsgs) == 0
+		if !valid {
+			h.templaterender(w, http.StatusOK, "signup.html", data)
+			return
+		}
 		err = h.Service.SignUp(form)
 		if err != nil {
-			h.errorpage(w, http.StatusBadRequest, err)
+			valid = false
+			switch err {
+			case models.ErrDuplicateEmail:
+				data.ErrMsgs["email"] = validator.MsgEmailExists
+			case models.ErrDuplicateName:
+				data.ErrMsgs["name"] = validator.MsgNameExists
+			default:
+				h.errorpage(w, http.StatusInternalServerError, err)
+			}
+		}
+		if !valid {
+			h.templaterender(w, http.StatusOK, "signup.html", data)
 			return
 		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
