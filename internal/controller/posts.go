@@ -14,7 +14,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		title := r.FormValue("title")
 		content := r.FormValue("content")
-		data := r.Context().Value(ctxKey).(Data)
+		data := r.Context().Value(ctxKey).(*Data)
 		h.Service.Create(data.User.ID, title, content)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }

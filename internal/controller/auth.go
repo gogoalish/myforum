@@ -84,8 +84,8 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(models.User)
-	err := h.Service.LogOut(*user.Token)
+	data := r.Context().Value(ctxKey).(*Data)
+	err := h.Service.LogOut(*data.User.Token)
 	if err != nil {
 		h.ErrorLog.Println(err)
 	}
