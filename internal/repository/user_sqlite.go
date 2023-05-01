@@ -10,6 +10,7 @@ import (
 type Users interface {
 	SignUp(models.User) error
 	UserByEmail(email string) (models.User, error)
+	UserByName(name string) (models.User, error)
 	UserByToken(token string) (models.User, error)
 	UserById(id int) (models.User, error)
 	SetToken(id int, token string) error
@@ -38,6 +39,17 @@ func (u *UserRepo) UserByEmail(email string) (models.User, error) {
 	WHERE ? = email`
 	var user models.User
 	err := u.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token, &user.Expires)
+	if errors.Is(err, sql.ErrNoRows) {
+		return user, models.ErrNoRecord
+	}
+	return user, err
+}
+
+func (u *UserRepo) UserByName(name string) (models.User, error) {
+	query := `SELECT * FROM users
+	WHERE ? = email`
+	var user models.User
+	err := u.QueryRow(query, name).Scan(&user.ID, &user.Email, &user.Name, &user.Password, &user.Token, &user.Expires)
 	if errors.Is(err, sql.ErrNoRows) {
 		return user, models.ErrNoRecord
 	}

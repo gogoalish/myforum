@@ -8,6 +8,10 @@ import (
 	"forum/internal/models"
 )
 
+type contextKey string
+
+const ctxKey contextKey = "data"
+
 func SecureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Security-Policy",
@@ -20,23 +24,27 @@ func SecureHeaders(next http.Handler) http.Handler {
 	})
 }
 
-func (h *Handler) CheckAuth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CheckAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
-		var user models.User
+
+		data := &Data{}
 		switch err {
 		case http.ErrNoCookie:
-			user = models.User{}
+			data.User = models.User{}
 		case nil:
-			user, err = h.Service.UserByToken(cookie.Value)
+			data.User, err = h.Service.UserByToken(cookie.Value)
 			if err != nil {
 				fmt.Printf("user by token: %s\n", err)
+			}
+			if data.User.Token != nil {
+				data.IsAuthorized = true
 			}
 		default:
 			h.ErrorLog.Println(err)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "user", user)
+		ctx := context.WithValue(r.Context(), ctxKey, data)
 		next.ServeHTTP(w, r.WithContext(ctx))
-	}
+	})
 }

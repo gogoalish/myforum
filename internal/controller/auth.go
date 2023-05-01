@@ -1,43 +1,47 @@
 package controller
 
 import (
-	"log"
 	"net/http"
 
 	"forum/internal/models"
 )
 
-type TemplateData struct {
-	Data         any
+type Data struct {
+	User         models.User
+	Content      any
 	IsAuthorized bool
+	Validator    map[string]string
+}
+
+type ErrorData struct {
+	Status int
+	Text   string
 }
 
 func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
-	posts, err := h.Service.Posts.GetAll()
-	if err != nil {
-		h.serverError(w, err)
+	if r.URL.Path != "/" {
+		h.errorpage(w, http.StatusNotFound, nil)
 		return
 	}
-	data := &TemplateData{posts, false}
-	user := r.Context().Value("user").(models.User)
-	if user.Token != nil {
-		data.IsAuthorized = true
+	posts, err := h.Service.Posts.GetAll()
+	if err != nil {
+		h.errorpage(w, http.StatusInternalServerError, err)
+		return
 	}
+	data := r.Context().Value(ctxKey).(*Data)
+	data.Content = posts
 	h.templaterender(w, http.StatusOK, "index.html", data)
 }
 
 func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		err := h.Tempcache.ExecuteTemplate(w, "signup.html", nil)
-		if err != nil {
-			h.ErrorLog.Println(err)
-		}
+		data := r.Context().Value(ctxKey).(*Data)
+		h.templaterender(w, http.StatusOK, "signup.html", data)
 	case http.MethodPost:
 		err := r.ParseForm()
 		if err != nil {
-			h.ErrorLog.Println(err)
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
 		form := models.User{
@@ -47,9 +51,9 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 		}
 		err = h.Service.SignUp(form)
 		if err != nil {
-			h.ErrorLog.Println(err)
+			h.errorpage(w, http.StatusBadRequest, err)
+			return
 		}
-		log.Printf("user created email: %s, name: %s, password: %s", form.Email, form.Name, form.Password)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }

@@ -2,8 +2,6 @@ package controller
 
 import (
 	"net/http"
-
-	"forum/internal/models"
 )
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +14,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		title := r.FormValue("title")
 		content := r.FormValue("content")
-		user := r.Context().Value("user").(models.User)
-		h.Service.Create(user.ID, title, content)
+		data := r.Context().Value(ctxKey).(Data)
+		h.Service.Create(data.User.ID, title, content)
 	}
 }
