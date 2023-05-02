@@ -7,33 +7,6 @@ import (
 	"forum/internal/validator"
 )
 
-type Data struct {
-	User         models.User
-	Content      any
-	IsAuthorized bool
-	ErrMsgs      map[string]string
-}
-
-type ErrorData struct {
-	Status int
-	Text   string
-}
-
-func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		h.errorpage(w, http.StatusNotFound, nil)
-		return
-	}
-	posts, err := h.Service.Posts.GetAll()
-	if err != nil {
-		h.errorpage(w, http.StatusInternalServerError, err)
-		return
-	}
-	data := r.Context().Value(ctxKey).(*Data)
-	data.Content = posts
-	h.templaterender(w, http.StatusOK, "index.html", data)
-}
-
 func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:

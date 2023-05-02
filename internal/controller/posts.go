@@ -15,6 +15,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		h.templaterender(w, http.StatusOK, "create.html", nil)
 	case http.MethodPost:
+		data := r.Context().Value(ctxKey).(*Data)
 		err := r.ParseForm()
 		if err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)
@@ -22,7 +23,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		}
 		title := r.FormValue("title")
 		content := r.FormValue("content")
-		data := r.Context().Value(ctxKey).(*Data)
+
 		id, err := h.Service.Posts.Create(data.User.ID, title, content)
 		if err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)

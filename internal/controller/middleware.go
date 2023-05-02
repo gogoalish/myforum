@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"forum/internal/models"
@@ -13,6 +14,7 @@ type contextKey string
 const ctxKey contextKey = "data"
 
 func SecureHeaders(next http.Handler) http.Handler {
+	fmt.Println("here")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Security-Policy",
 			"default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com")
@@ -24,7 +26,7 @@ func SecureHeaders(next http.Handler) http.Handler {
 	})
 }
 
-func (h *Handler) CheckAuth(next http.Handler) http.Handler {
+func (h *Handler) middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
 		data := &Data{}
@@ -47,4 +49,15 @@ func (h *Handler) CheckAuth(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), ctxKey, data)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func (h *Handler) requireauth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := r.Context().Value(ctxKey).(*Data)
+		if !data.IsAuthorized {
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
 }
