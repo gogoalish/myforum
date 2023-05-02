@@ -116,6 +116,7 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 		cookie := &http.Cookie{
 			Name:  "session",
 			Value: *user.Token,
+			Path:  "/",
 		}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", http.StatusSeeOther)

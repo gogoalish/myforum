@@ -11,15 +11,19 @@ type PostService struct {
 
 type Posts interface {
 	GetAll() ([]*models.Post, error)
-	Create(UserID int, title, content string) error
+	Create(UserID int, title, content string) (int, error)
+	GetById(id int) (*models.Post, error)
 }
 
-func (p *PostService) GetAll() ([]*models.Post, error) {
-	posts, err := p.repo.All()
+func (s *PostService) GetAll() ([]*models.Post, error) {
+	posts, err := s.repo.GetAll()
 	return posts, err
 }
 
-func (p *PostService) Create(UserID int, title, content string) error {
-	err := p.repo.Create(UserID, title, content)
-	return err
+func (s *PostService) Create(UserID int, title, content string) (int, error) {
+	return s.repo.Insert(UserID, title, content)
+}
+
+func (s *PostService) GetById(id int) (*models.Post, error) {
+	return s.repo.PostById(id)
 }
