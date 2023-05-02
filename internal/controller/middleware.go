@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"forum/internal/models"
@@ -27,15 +27,15 @@ func SecureHeaders(next http.Handler) http.Handler {
 func (h *Handler) CheckAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
-
 		data := &Data{}
 		switch err {
 		case http.ErrNoCookie:
 			data.User = models.User{}
 		case nil:
 			data.User, err = h.Service.UserByToken(cookie.Value)
-			if err != nil {
-				fmt.Printf("user by token: %s\n", err)
+			if err != nil && !errors.Is(err, models.ErrNoRecord) {
+				h.ErrorLog.Println(err)
+				return
 			}
 			if data.User.Token != nil {
 				data.IsAuthorized = true

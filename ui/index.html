@@ -11,7 +11,11 @@
     <a href="/signin">signin</a>
     {{if .IsAuthorized}}
         <a href="/create">create</a>
-        <a href="/logout">logout</a>
+        <form action="/logout" method="post">
+            <button>
+                Sign out
+            </button>
+        </form>
     {{end}}
     {{ range .Content}}
     <div>{{.Title}}</div>

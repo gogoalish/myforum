@@ -9,10 +9,12 @@ import (
 )
 
 const (
-	MsgEmailExists  = "Email already exists"
-	MsgNameExists   = "Name already exists"
-	MsgInvalidEmail = "Write correct email"
-	MsgInvalidName  = "Write correct name"
+	MsgEmailExists        = "Email already exists"
+	MsgNameExists         = "Name already exists"
+	MsgInvalidEmail       = "Write correct email"
+	MsgInvalidName        = "Write correct name"
+	MsgUserNotFound       = "User not found"
+	MsgNotCorrectPassword = "Password is not correct"
 )
 
 func GetErrMsgs(m models.User) map[string]string {

@@ -37,8 +37,8 @@ func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		data := r.Context().Value(ctxKey).(*Data)
-		h.templaterender(w, http.StatusOK, "signup.html", data)
+		// data := r.Context().Value(ctxKey).(*Data)
+		h.templaterender(w, http.StatusOK, "signup.html", nil)
 	case http.MethodPost:
 		data := r.Context().Value(ctxKey).(*Data)
 		err := r.ParseForm()
@@ -52,15 +52,18 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 			Password: r.PostForm.Get("password"),
 		}
 		data.Content = form
+		if form.Email == "" || form.Name == "" || form.Password == "" {
+			data.ErrMsgs = validator.GetErrMsgs(form)
+			h.templaterender(w, http.StatusBadRequest, "signup.html", data)
+			return
+		}
 		data.ErrMsgs = validator.GetErrMsgs(form)
-		valid := len(data.ErrMsgs) == 0
-		if !valid {
-			h.templaterender(w, http.StatusOK, "signup.html", data)
+		if len(data.ErrMsgs) != 0 {
+			h.templaterender(w, http.StatusUnprocessableEntity, "signup.html", data)
 			return
 		}
 		err = h.Service.SignUp(form)
 		if err != nil {
-			valid = false
 			switch err {
 			case models.ErrDuplicateEmail:
 				data.ErrMsgs["email"] = validator.MsgEmailExists
@@ -68,10 +71,9 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 				data.ErrMsgs["name"] = validator.MsgNameExists
 			default:
 				h.errorpage(w, http.StatusInternalServerError, err)
+				return
 			}
-		}
-		if !valid {
-			h.templaterender(w, http.StatusOK, "signup.html", data)
+			h.templaterender(w, http.StatusConflict, "signup.html", data)
 			return
 		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -81,17 +83,34 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		err := h.Tempcache.ExecuteTemplate(w, "signin.html", nil)
+		// data := r.Context().Value(ctxKey).(*Data)
+		h.templaterender(w, http.StatusOK, "signin.html", nil)
+	case http.MethodPost:
+		data := r.Context().Value(ctxKey).(*Data)
+		err := r.ParseForm()
 		if err != nil {
-			h.ErrorLog.Println(err)
+			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-	case http.MethodPost:
-		email := r.FormValue("email")
-		password := r.FormValue("password")
-		user, err := h.Service.SignIn(email, password)
+		login, password := r.PostForm.Get("login"), r.PostForm.Get("password")
+		data.Content = login
+		if login == "" || password == "" {
+			h.templaterender(w, http.StatusBadRequest, "signin.html", data)
+			return
+		}
+		user, err := h.Service.SignIn(login, password)
 		if err != nil {
-			h.ErrorLog.Println(err)
+			data.ErrMsgs = make(map[string]string)
+			switch err {
+			case models.ErrNoRecord:
+				data.ErrMsgs["login"] = validator.MsgUserNotFound
+			case models.ErrInvalidCredentials:
+				data.ErrMsgs["password"] = validator.MsgNotCorrectPassword
+			default:
+				h.errorpage(w, http.StatusInternalServerError, err)
+				return
+			}
+			h.templaterender(w, http.StatusUnauthorized, "signin.html", data)
 			return
 		}
 		cookie := &http.Cookie{
@@ -104,10 +123,15 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		h.errorpage(w, http.StatusMethodNotAllowed, nil)
+		return
+	}
 	data := r.Context().Value(ctxKey).(*Data)
 	err := h.Service.LogOut(*data.User.Token)
 	if err != nil {
-		h.ErrorLog.Println(err)
+		h.errorpage(w, http.StatusInternalServerError, err)
+		return
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
