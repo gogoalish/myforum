@@ -12,12 +12,12 @@ type PostRepo struct {
 }
 
 type Posts interface {
-	Insert(UserID int, title, content string) (int, error)
-	GetAll() ([]*models.Post, error)
+	InsertPost(UserID int, title, content string) (int, error)
+	FetchPosts() ([]*models.Post, error)
 	PostById(id int) (*models.Post, error)
 }
 
-func (r *PostRepo) Insert(userID int, title, content string) (int, error) {
+func (r *PostRepo) InsertPost(userID int, title, content string) (int, error) {
 	query := `INSERT INTO posts
 	VALUES(NULL, ?, ?, ?)`
 	res, err := r.DB.Exec(query, userID, title, content)
@@ -44,7 +44,7 @@ func (r *PostRepo) PostById(id int) (*models.Post, error) {
 	return p, nil
 }
 
-func (r *PostRepo) GetAll() ([]*models.Post, error) {
+func (r *PostRepo) FetchPosts() ([]*models.Post, error) {
 	posts := []*models.Post{}
 	query := `SELECT *, (
 		SELECT name FROM users WHERE users.id = posts.user_id

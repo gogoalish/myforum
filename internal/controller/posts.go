@@ -10,7 +10,7 @@ import (
 	"forum/internal/models"
 )
 
-func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) postcreate(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		h.templaterender(w, http.StatusOK, "create.html", nil)
@@ -33,7 +33,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) showpost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 	data := r.Context().Value(ctxKey).(*Data)
 	path := strings.Split(r.URL.Path, "/")
 	id, err := strconv.Atoi(path[len(path)-1])

@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"forum/internal/models"
@@ -14,7 +13,6 @@ type contextKey string
 const ctxKey contextKey = "data"
 
 func SecureHeaders(next http.Handler) http.Handler {
-	fmt.Println("here")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Security-Policy",
 			"default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com")
@@ -34,7 +32,7 @@ func (h *Handler) middleware(next http.Handler) http.Handler {
 		case http.ErrNoCookie:
 			data.User = models.User{}
 		case nil:
-			data.User, err = h.Service.UserByToken(cookie.Value)
+			data.User, err = h.Service.Users.GetByToken(cookie.Value)
 			if err != nil && !errors.Is(err, models.ErrNoRecord) {
 				h.ErrorLog.Println(err)
 				return

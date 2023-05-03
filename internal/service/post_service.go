@@ -16,12 +16,12 @@ type Posts interface {
 }
 
 func (s *PostService) GetAll() ([]*models.Post, error) {
-	posts, err := s.repo.GetAll()
+	posts, err := s.repo.FetchPosts()
 	return posts, err
 }
 
 func (s *PostService) Create(UserID int, title, content string) (int, error) {
-	return s.repo.Insert(UserID, title, content)
+	return s.repo.InsertPost(UserID, title, content)
 }
 
 func (s *PostService) GetById(id int) (*models.Post, error) {

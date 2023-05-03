@@ -12,7 +12,7 @@ import (
 type Users interface {
 	SignUp(models.User) error
 	SignIn(login, password string) (models.User, error)
-	UserByToken(token string) (models.User, error)
+	GetByToken(token string) (models.User, error)
 	LogOut(token string) error
 }
 
@@ -39,15 +39,15 @@ func (u *UserService) SignUp(m models.User) error {
 	if err != nil {
 		return fmt.Errorf("userservice - signup #3: %w", err)
 	}
-	u.repo.SignUp(m)
+	u.repo.InsertUser(m)
 	return nil
 }
 
-func (u *UserService) SignIn(login, password string) (models.User, error) {
-	m, err := u.repo.UserByEmail(login)
+func (s *UserService) SignIn(login, password string) (models.User, error) {
+	m, err := s.repo.UserByEmail(login)
 	switch {
 	case errors.Is(err, models.ErrNoRecord):
-		m, err = u.repo.UserByName(login)
+		m, err = s.repo.UserByName(login)
 		if err != nil {
 			if errors.Is(err, models.ErrNoRecord) {
 				return m, err
@@ -66,17 +66,17 @@ func (u *UserService) SignIn(login, password string) (models.User, error) {
 	if err != nil {
 		return m, fmt.Errorf("userservice - signin #3: %w", err)
 	}
-	err = u.repo.SetToken(m.ID, *m.Token)
+	err = s.repo.SetToken(m.ID, *m.Token)
 	if err != nil {
 		return m, fmt.Errorf("userservice - signin #4: %w", err)
 	}
 	return m, nil
 }
 
-func (u *UserService) UserByToken(token string) (models.User, error) {
-	return u.repo.UserByToken(token)
+func (s *UserService) GetByToken(token string) (models.User, error) {
+	return s.repo.UserByToken(token)
 }
 
-func (u *UserService) LogOut(token string) error {
-	return u.repo.RemoveToken(token)
+func (s *UserService) LogOut(token string) error {
+	return s.repo.RemoveToken(token)
 }

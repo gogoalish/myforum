@@ -33,7 +33,7 @@ func Run() {
 		ErrorLog: errorLog,
 		Handler:  controller.Routes(handler),
 	}
-	log.Printf("listening on http://localhost" + PORT + "/signup")
+	log.Printf("listening on http://localhost" + PORT)
 	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
