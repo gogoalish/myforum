@@ -23,6 +23,7 @@ func Create(DB *sql.DB) error {
 			post_id INTEGER NOT NULL,
 			user_id INTEGER NOT NULL,
 			content TEXT NOT NULL,
+			parent_id INTEGER DEFAULT 0,
 			FOREIGN KEY (post_id) REFERENCES posts(id),
 			FOREIGN KEY (user_id) REFERENCES users(id)
 		);`

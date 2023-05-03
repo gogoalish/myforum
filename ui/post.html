@@ -12,14 +12,11 @@
     {{with .Content}}
     <h1>{{.post.Title}}</h1>
     <br>
-    <label>{{.post.Creator}}</label>
+    <label>author - {{.post.Creator}}</label>
     <br>
     <label>{{.post.Content}}</label>
     <br>
-    {{range .comment}}
-    <label>{{.Creator}} - {{.Content}}</label>
-    <br>
-    {{end}}
+    {{template "comment" .comments}}
     {{end}}
     {{if .IsAuthorized}}
     <form action="/posts/{{.Content.post.ID}}" method="post">

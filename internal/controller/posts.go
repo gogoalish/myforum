@@ -53,20 +53,21 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-		content := make(map[string]any)
-		content["post"] = post
+
 		comments, err := h.Service.Comments.Fetch(post.ID)
 		if err != nil && !errors.Is(err, models.ErrNoRecord) {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-
-		content["comment"] = comments
+		content := make(map[string]any)
+		content["post"] = post
+		content["comments"] = comments
 		data.Content = content
 		h.templaterender(w, http.StatusOK, "post.html", data)
 	case http.MethodPost:
 		if data.User == (models.User{}) {
 			h.errorpage(w, http.StatusUnauthorized, nil)
+			return
 		}
 		if err := r.ParseForm(); err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)
@@ -76,6 +77,10 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 			PostID:  id,
 			UserID:  data.User.ID,
 			Content: r.PostForm.Get("content"),
+		}
+		if comment.Content == "" {
+			h.errorpage(w, http.StatusBadRequest, err)
+			return
 		}
 		h.Service.Comments.Create(comment)
 		http.Redirect(w, r, fmt.Sprintf("/posts/%v", id), http.StatusSeeOther)

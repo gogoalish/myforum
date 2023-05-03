@@ -1,0 +1,11 @@
+{{ define "comment" }}
+    {{range .}}
+        <label>{{.Creator}} - {{.Content}}</label>
+        <br>
+        {{if gt (len .Replies) 0}}
+            {{template "comment" .Replies}}
+        {{end}}
+    {{end}}
+{{end}}
+
+{{ template "comment" .}}

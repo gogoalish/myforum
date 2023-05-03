@@ -6,7 +6,8 @@ import (
 )
 
 type PostService struct {
-	repo repository.Posts
+	repo     repository.Posts
+	cmntRepo repository.Comments
 }
 
 type Posts interface {
@@ -17,6 +18,12 @@ type Posts interface {
 
 func (s *PostService) GetAll() ([]*models.Post, error) {
 	posts, err := s.repo.FetchPosts()
+	for _, post := range posts {
+		post.CmntCount, err = s.cmntRepo.CountCommentsByPostId(post.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return posts, err
 }
 
@@ -25,5 +32,13 @@ func (s *PostService) Create(UserID int, title, content string) (int, error) {
 }
 
 func (s *PostService) GetById(id int) (*models.Post, error) {
-	return s.repo.PostById(id)
+	post, err := s.repo.PostById(id)
+	if err != nil {
+		return nil, err
+	}
+	post.CmntCount, err = s.cmntRepo.CountCommentsByPostId(id)
+	if err != nil {
+		return nil, err
+	}
+	return post, nil
 }
