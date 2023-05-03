@@ -7,11 +7,13 @@ import (
 type Service struct {
 	Users
 	Posts
+	Comments
 }
 
 func New(r *repository.Repo) *Service {
 	return &Service{
-		Users: &UserService{r.Users},
-		Posts: &PostService{r.Posts},
+		Users:    &UserService{r.Users},
+		Posts:    &PostService{r.Posts},
+		Comments: &CommentService{r.Comments},
 	}
 }

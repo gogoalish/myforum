@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // func main() {
@@ -88,12 +87,7 @@ import (
 // }
 
 func main() {
-	test := []byte("test")
-	clean := []byte("clean")
-	crypted, _ := bcrypt.GenerateFromPassword(test, 3)
-	cryptclean, _ := bcrypt.GenerateFromPassword(clean, 3)
-	fmt.Println(string(crypted))
-	fmt.Println(bcrypt.CompareHashAndPassword(crypted, clean))
-	fmt.Println(bcrypt.CompareHashAndPassword(cryptclean, test))
-	fmt.Println(bcrypt.CompareHashAndPassword(cryptclean, clean))
+	db, _ := sql.Open("sqlite3", "forum.db")
+	query := `DROP TABLE comments`
+	db.Exec(query)
 }

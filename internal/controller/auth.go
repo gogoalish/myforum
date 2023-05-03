@@ -97,10 +97,6 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		h.errorpage(w, http.StatusMethodNotAllowed, nil)
-		return
-	}
 	data := r.Context().Value(ctxKey).(*Data)
 	err := h.Service.LogOut(*data.User.Token)
 	if err != nil {

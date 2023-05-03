@@ -41,15 +41,43 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 		h.errorpage(w, http.StatusNotFound, err)
 		return
 	}
-	post, err := h.Service.Posts.GetById(id)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			h.errorpage(w, http.StatusNotFound, err)
+
+	switch r.Method {
+	case http.MethodGet:
+		post, err := h.Service.Posts.GetById(id)
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				h.errorpage(w, http.StatusNotFound, err)
+				return
+			}
+			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-		h.errorpage(w, http.StatusInternalServerError, err)
-		return
+		content := make(map[string]any)
+		content["post"] = post
+		comments, err := h.Service.Comments.Fetch(post.ID)
+		if err != nil && !errors.Is(err, models.ErrNoRecord) {
+			h.errorpage(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		content["comment"] = comments
+		data.Content = content
+		h.templaterender(w, http.StatusOK, "post.html", data)
+	case http.MethodPost:
+		if data.User == (models.User{}) {
+			h.errorpage(w, http.StatusUnauthorized, nil)
+		}
+		if err := r.ParseForm(); err != nil {
+			h.errorpage(w, http.StatusInternalServerError, err)
+			return
+		}
+		comment := &models.Comment{
+			PostID:  id,
+			UserID:  data.User.ID,
+			Content: r.PostForm.Get("content"),
+		}
+		h.Service.Comments.Create(comment)
+		http.Redirect(w, r, fmt.Sprintf("/posts/%v", id), http.StatusSeeOther)
 	}
-	data.Content = post
-	h.templaterender(w, http.StatusOK, "post.html", data)
 }

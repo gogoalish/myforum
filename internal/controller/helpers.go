@@ -51,10 +51,10 @@ func (h *Handler) templaterender(w http.ResponseWriter, status int, page string,
 }
 
 func (h *Handler) errorpage(w http.ResponseWriter, status int, err error) {
-	msg := http.StatusText(status)
 	if err != nil {
 		h.ErrorLog.Printf("server error: %v", err)
 	}
+	msg := http.StatusText(status)
 	errdata := ErrorData{status, msg}
 	h.templaterender(w, status, "errors.html", errdata)
 }

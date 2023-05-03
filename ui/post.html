@@ -1,14 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
-    <h1>{{.Content.Title}}</h1>
-    <label>{{.Content.Creator}}</label>
-    <label>{{.Content.Content}}</label>
+    {{with .Content}}
+    <h1>{{.post.Title}}</h1>
+    <br>
+    <label>{{.post.Creator}}</label>
+    <br>
+    <label>{{.post.Content}}</label>
+    <br>
+    {{range .comment}}
+    <label>{{.Creator}} - {{.Content}}</label>
+    <br>
+    {{end}}
+    {{end}}
+    {{if .IsAuthorized}}
+    <form action="/posts/{{.Content.post.ID}}" method="post">
+        <input type="text" name="content">
+        <input type="submit" value="create">
+    </form>
+    {{end}}
 </body>
+
 </html>
