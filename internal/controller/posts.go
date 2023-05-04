@@ -53,16 +53,12 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-
-		comments, err := h.Service.Comments.Fetch(post.ID)
+		post.Comments, err = h.Service.Comments.Fetch(post.ID)
 		if err != nil && !errors.Is(err, models.ErrNoRecord) {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-		content := make(map[string]any)
-		content["post"] = post
-		content["comments"] = comments
-		data.Content = content
+		data.Content = post
 		h.templaterender(w, http.StatusOK, "post.html", data)
 	case http.MethodPost:
 		if data.User == (models.User{}) {
@@ -78,7 +74,8 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 			UserID:  data.User.ID,
 			Content: r.PostForm.Get("content"),
 		}
-		if comment.Content == "" {
+		comment.ParentID, err = strconv.Atoi(r.PostForm.Get("parent"))
+		if comment.Content == "" && err != nil {
 			h.errorpage(w, http.StatusBadRequest, err)
 			return
 		}

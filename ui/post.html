@@ -10,16 +10,19 @@
 
 <body>
     {{with .Content}}
-    <h1>{{.post.Title}}</h1>
+    <h1>{{.Title}}</h1>
     <br>
-    <label>author - {{.post.Creator}}</label>
+    <label>author - {{.Creator}}</label>
     <br>
-    <label>{{.post.Content}}</label>
+    <label>{{.Content}}</label>
     <br>
-    {{template "comment" .comments}}
+    {{with .Comments}}
+    <div>{{template "comment" .}}</div>
+    {{end}}
     {{end}}
     {{if .IsAuthorized}}
-    <form action="/posts/{{.Content.post.ID}}" method="post">
+    <form method="post">
+        <!-- <input type="hidden" name = "parent" value="" > -->
         <input type="text" name="content">
         <input type="submit" value="create">
     </form>

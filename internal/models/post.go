@@ -7,4 +7,5 @@ type Post struct {
 	Content   string
 	Creator   string
 	CmntCount int
+	Comments  []*Comment
 }

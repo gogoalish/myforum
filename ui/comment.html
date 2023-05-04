@@ -1,6 +1,11 @@
 {{ define "comment" }}
     {{range .}}
-        <label>{{.Creator}} - {{.Content}}</label>
+        <p>{{.Creator}} - {{.Content}}</p>
+        <form method="post">
+            <input type="hidden" name = "parent" value="{{.ID}}">
+            <input type="text" name="content">
+            <input type="submit" value="create">
+        </form>
         <br>
         {{if gt (len .Replies) 0}}
             {{template "comment" .Replies}}
