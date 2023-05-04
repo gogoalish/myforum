@@ -18,8 +18,14 @@
         </form>
     {{end}}
     {{ range .Content}}
-        <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a>
+        <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.LikesCount}} D - {{.DislikesCount}}</label>
         <br>
+        <form method="post">
+            <input type="hidden" name="post" value="{{.ID}}">
+            <input type="submit" name="reaction" value="like">
+            <input type="submit" name="reaction" value="dislike">
+        </form>
     {{ end }}
+ 
 </body>
 </html>

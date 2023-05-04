@@ -1,6 +1,9 @@
 package controller
 
-import "net/http"
+import (
+	"net/http"
+	"strconv"
+)
 
 func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -14,5 +17,27 @@ func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
 	}
 	data := r.Context().Value(ctxKey).(*Data)
 	data.Content = posts
-	h.templaterender(w, http.StatusOK, "index.html", data)
+	switch r.Method {
+	case http.MethodGet:
+		h.templaterender(w, http.StatusOK, "index.html", data)
+	case http.MethodPost:
+		err = r.ParseForm()
+		if err != nil {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+		reaction := r.PostForm.Get("reaction")
+		userID := data.User.ID
+		postID, err := strconv.Atoi(r.PostForm.Get("post"))
+		if err != nil || (reaction != "like" && reaction != "dislike") {
+			h.errorpage(w, http.StatusBadRequest, nil)
+			return
+		}
+		err = h.Service.React(postID, userID, reaction)
+		if err != nil {
+			h.errorpage(w, http.StatusInternalServerError, err)
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
 }

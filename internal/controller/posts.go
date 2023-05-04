@@ -21,10 +21,16 @@ func (h *Handler) postcreate(w http.ResponseWriter, r *http.Request) {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-		title := r.FormValue("title")
-		content := r.FormValue("content")
-
-		id, err := h.Service.Posts.Create(data.User.ID, title, content)
+		post := &models.Post{
+			UserID:  data.User.ID,
+			Title:   r.PostForm.Get("title"),
+			Content: r.PostForm.Get("content"),
+		}
+		if post.Title == "" && post.Content == "" {
+			h.errorpage(w, http.StatusBadRequest, nil)
+			return
+		}
+		id, err := h.Service.Posts.Create(post)
 		if err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
@@ -41,7 +47,6 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 		h.errorpage(w, http.StatusNotFound, err)
 		return
 	}
-
 	switch r.Method {
 	case http.MethodGet:
 		post, err := h.Service.Posts.GetById(id)
@@ -62,7 +67,7 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 		h.templaterender(w, http.StatusOK, "post.html", data)
 	case http.MethodPost:
 		if data.User == (models.User{}) {
-			h.errorpage(w, http.StatusUnauthorized, nil)
+			h.templaterender(w, http.StatusUnauthorized, "index.html", nil)
 			return
 		}
 		if err := r.ParseForm(); err != nil {
@@ -82,4 +87,33 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 		h.Service.Comments.Create(comment)
 		http.Redirect(w, r, fmt.Sprintf("/posts/%v", id), http.StatusSeeOther)
 	}
+}
+
+func (h *Handler) postreaction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		h.errorpage(w, http.StatusMethodNotAllowed, nil)
+		return
+	}
+	data := r.Context().Value(ctxKey).(*Data)
+	if data.User == (models.User{}) {
+		h.errorpage(w, http.StatusUnauthorized, nil)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		h.errorpage(w, http.StatusInternalServerError, err)
+		return
+	}
+	reaction := r.PostForm.Get("reaction")
+	userID := data.User.ID
+	postID, err := strconv.Atoi(r.PostForm.Get("post"))
+	if err != nil || (reaction != "like" && reaction != "dislike") {
+		h.errorpage(w, http.StatusBadRequest, nil)
+		return
+	}
+	err = h.Service.React(postID, userID, reaction)
+	if err != nil {
+		h.errorpage(w, http.StatusInternalServerError, err)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/posts/%v", postID), http.StatusSeeOther)
 }

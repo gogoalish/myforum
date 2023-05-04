@@ -29,7 +29,8 @@ func Routes(h *Handler) http.Handler {
 	mux.HandleFunc("/signup", (h.signup))
 	mux.HandleFunc("/signin", h.signin)
 	mux.HandleFunc("/posts/create", h.requireauth(h.postcreate))
-	mux.HandleFunc("/logout", h.requireauth(h.logout))
+	mux.HandleFunc("/logout", (h.logout))
 	mux.HandleFunc("/posts/", (h.postview))
+	mux.HandleFunc("/post_react", h.requireauth(h.postreaction))
 	return h.middleware(SecureHeaders(mux))
 }
