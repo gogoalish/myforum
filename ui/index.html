@@ -17,6 +17,22 @@
             </button>
         </form>
     {{end}}
+    <form action="/filter" method="post">
+        <div class= "filters">
+            <input type="checkbox" id="filter" name="filter" value="1"> General discussions
+            <input type="checkbox" id="filter" name="filter" value="2"> Technical support
+            <input type="checkbox" id="filter" name="filter" value="3"> Programming <br>
+            <input type="checkbox" id="filter" name="filter" value="4"> Networking and security
+            <input type="checkbox" id="filter" name="filter" value="5"> Career and education
+            <input type="checkbox" id="filter" name="filter" value="6"> Mobile and web development <br>
+            <input type="checkbox" id="filter" name="filter" value="7"> Operating systems and software
+            <input type="checkbox" id="filter" name="filter" value="8"> Gaming
+            <input type="checkbox" id="filter" name="filter" value="9"> Industry news and trends
+        </div>
+        <button type="submit" class="filter_button">
+            Submit
+        </button>
+    </form>
     {{ range .Content}}
         <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.LikesCount}} D - {{.DislikesCount}} {{range .Categories}}{{.}}{{end}}</label>
         <br>

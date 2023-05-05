@@ -97,6 +97,8 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
+
 func (h *Handler) postreaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		h.errorpage(w, http.StatusMethodNotAllowed, nil)

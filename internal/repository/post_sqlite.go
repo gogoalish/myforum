@@ -24,6 +24,7 @@ type Posts interface {
 	DislikesByPostId(postID int) ([]*models.Reaction, error)
 	InsertCategory(postID int, catID []int) error
 	CategoriesById(postID int) ([]string, error)
+	Filter(catID []int) ([]*models.Post, error)
 }
 
 func (r *PostRepo) InsertPost(p *models.Post) (int, error) {
@@ -190,4 +191,28 @@ func (r *PostRepo) DislikesByPostId(postID int) ([]*models.Reaction, error) {
 		dislikes = append(dislikes, r)
 	}
 	return dislikes, err
+}
+
+func (r *PostRepo) Filter(catID []int) ([]*models.Post, error) {
+	newpost := []*models.Post{}
+	query := `select posts.id, posts.user_id, posts.title, posts.content, users.name  from posts 
+	join post_cat on posts.id=post_cat.post_id
+	join users on users.id=posts.user_id
+	where post_cat.cat_id=?;`
+	for _, i := range catID {
+		rows, err := r.Query(query, i)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			p := &models.Post{}
+			err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.Creator)
+			if err != nil {
+				return nil, err
+			}
+			newpost = append(newpost, p)
+		}
+	}
+	return newpost, nil
 }
