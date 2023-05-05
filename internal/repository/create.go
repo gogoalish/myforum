@@ -36,6 +36,16 @@ func Create(DB *sql.DB) error {
 			FOREIGN KEY (post_id) REFERENCES posts(id),
 			FOREIGN KEY (comment_id) REFERENCES comments(id),
 			FOREIGN KEY (user_id) REFERENCES users(id)
+		);
+		CREATE TABLE IF NOT EXISTS categories (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			category TEXT NOT NULL
+			);
+		CREATE TABLE IF NOT EXISTS post_cat (
+			cat_id INTEGER,
+			post_id INTEGER,
+			FOREIGN KEY (cat_id) REFERENCES categories(id),			
+			FOREIGN KEY (post_id) REFERENCES posts(id)			
 		);`
 	_, err := DB.Exec(query)
 	return err

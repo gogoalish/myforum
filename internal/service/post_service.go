@@ -36,12 +36,21 @@ func (s *PostService) GetAll() ([]*models.Post, error) {
 		if err != nil {
 			return nil, err
 		}
+		post.Categories, err = s.repo.CategoriesById(post.ID)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return posts, err
 }
 
 func (s *PostService) Create(p *models.Post) (int, error) {
-	return s.repo.InsertPost(p)
+	id, err := s.repo.InsertPost(p)
+	if err != nil {
+		return id, err
+	}
+	err = s.repo.InsertCategory(id, p.CatID)
+	return id, err
 }
 
 func (s *PostService) GetById(id int) (*models.Post, error) {
@@ -58,6 +67,10 @@ func (s *PostService) GetById(id int) (*models.Post, error) {
 		return nil, err
 	}
 	post.DislikesCount, err = s.CountDislikes(post.ID)
+	if err != nil {
+		return nil, err
+	}
+	post.Categories, err = s.repo.CategoriesById(post.ID)
 	if err != nil {
 		return nil, err
 	}

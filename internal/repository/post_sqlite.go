@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"forum/internal/models"
 )
@@ -21,6 +22,8 @@ type Posts interface {
 	UpdateReaction(postID, userID int, reaction string) error
 	LikesByPostId(postID int) ([]*models.Reaction, error)
 	DislikesByPostId(postID int) ([]*models.Reaction, error)
+	InsertCategory(postID int, catID []int) error
+	CategoriesById(postID int) ([]string, error)
 }
 
 func (r *PostRepo) InsertPost(p *models.Post) (int, error) {
@@ -50,6 +53,29 @@ func (r *PostRepo) PostById(id int) (*models.Post, error) {
 	return p, nil
 }
 
+func (r *PostRepo) CategoriesById(postID int) ([]string, error) {
+	query := `SELECT cat_id, (
+		SELECT category FROM categories WHERE categories.id = post_cat.cat_id
+		)
+	FROM post_cat WHERE post_id=?`
+	var categories []string
+	rows, err := r.Query(query, postID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var catid int64
+		var cat string
+		err = rows.Scan(&catid, &cat)
+		categories = append(categories, cat)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return categories, nil
+}
+
 func (r *PostRepo) FetchPosts() ([]*models.Post, error) {
 	posts := []*models.Post{}
 	query := `SELECT *, (
@@ -70,6 +96,18 @@ func (r *PostRepo) FetchPosts() ([]*models.Post, error) {
 		posts = append(posts, p)
 	}
 	return posts, err
+}
+
+func (r *PostRepo) InsertCategory(postID int, catID []int) error {
+	query := `INSERT INTO post_cat (post_id, cat_id) VALUES(?, ?)`
+	for _, i := range catID {
+		fmt.Println(postID)
+		_, err := r.Exec(query, postID, i)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *PostRepo) InsertReaction(postID, userID int, reaction string) error {

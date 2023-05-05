@@ -21,10 +21,18 @@ func (h *Handler) postcreate(w http.ResponseWriter, r *http.Request) {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
+
+		var catid []int
+
+		for _, value := range r.PostForm["cat"] {
+			number, _ := strconv.Atoi(value)
+			catid = append(catid, number)
+		}
 		post := &models.Post{
 			UserID:  data.User.ID,
 			Title:   r.PostForm.Get("title"),
 			Content: r.PostForm.Get("content"),
+			CatID:   catid,
 		}
 		if post.Title == "" && post.Content == "" {
 			h.errorpage(w, http.StatusBadRequest, nil)

@@ -10,4 +10,6 @@ type Post struct {
 	LikesCount    int
 	DislikesCount int
 	Comments      []*Comment
+	Categories    []string
+	CatID         []int
 }
