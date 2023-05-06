@@ -1,6 +1,13 @@
 {{ define "comment" }}
     {{range .}}
         <p>{{.Creator}} - {{.Content}}</p>
+        <label>L - {{.LikesCount}} D - {{.DislikesCount}}</label>
+        <form action="/reaction"  method="post">
+            <input type="hidden" name="object" value="comment">
+            <input type="hidden" name="id" value="{{.ID}}">
+            <input type="submit" name="reaction" value="like">
+            <input type="submit" name="reaction" value="dislike">
+        </form>
         <form method="post">
             <input type="hidden" name = "parent" value="{{.ID}}">
             <input type="text" name="content">

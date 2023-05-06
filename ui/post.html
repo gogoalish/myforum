@@ -22,8 +22,9 @@
     <label>{{.Content}}</label>
     <br>
     <label>L - {{.LikesCount}} D - {{.DislikesCount}}</label>
-    <form action="/post_react" method="post">
-        <input type="hidden" name="post" value="{{.ID}}">
+    <form action="/reaction" method="post">
+        <input type="hidden" name="object" value="post">
+        <input type="hidden" name="id" value="{{.ID}}">
         <input type="submit" name="reaction" value="like">
         <input type="submit" name="reaction" value="dislike">
     </form>
