@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <a href="/signup">signup</a>
     <a href="/signin">signin</a>
     {{if .IsAuthorized}}
-        <a href="/posts/create">create</a>
-        <form action="/logout" method="post">
-            <button>
-                Sign out
-            </button>
-        </form>
+    <a href="/posts/create">create</a>
+    <form action="/logout" method="post">
+        <button>
+            Sign out
+        </button>
+    </form>
     {{end}}
-    <form action="/filter" method="post">
-        <div class= "filters">
+    <form method="get" id="filterform">
+        <div class="filters">
             <input type="checkbox" id="filter" name="filter" value="1"> General discussions
             <input type="checkbox" id="filter" name="filter" value="2"> Technical support
             <input type="checkbox" id="filter" name="filter" value="3"> Programming <br>
@@ -33,15 +35,20 @@
             Submit
         </button>
     </form>
+    {{if .IsEmpty}}
+    <label>Your search returned no results...</label>
+    {{end}}
     {{ range .Content}}
-        <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.LikesCount}} D - {{.DislikesCount}} {{range .Categories}}{{.}}{{end}}</label>
-        <br>
-        <form method="post">
-            <input type="hidden" name="post" value="{{.ID}}">
-            <input type="submit" name="reaction" value="like">
-            <input type="submit" name="reaction" value="dislike">
-        </form>
+    <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.LikesCount}}
+        D - {{.DislikesCount}} {{range .Categories}}{{.}}{{end}}</label>
+    <br>
+    <form method="post" id="reactform">
+        <input type="hidden" name="post" value="{{.ID}}">
+        <input type="submit" formmethod="post" name="reaction" value="like">
+        <input type="submit" formmethod="post" name="reaction" value="dislike">
+    </form>
     {{ end }}
- 
+
 </body>
+
 </html>

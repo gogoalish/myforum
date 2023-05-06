@@ -14,6 +14,7 @@ type Data struct {
 	User         models.User
 	Content      any
 	IsAuthorized bool
+	IsEmpty      bool
 	ErrMsgs      map[string]string
 }
 
