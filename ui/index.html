@@ -20,8 +20,9 @@
     {{ range .Content}}
         <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.LikesCount}} D - {{.DislikesCount}} {{range .Categories}}{{.}}{{end}}</label>
         <br>
-        <form method="post">
-            <input type="hidden" name="post" value="{{.ID}}">
+        <form action="/reaction"  method="post">
+            <input type="hidden" name="object" value="post">
+            <input type="hidden" name="id" value="{{.ID}}">
             <input type="submit" name="reaction" value="like">
             <input type="submit" name="reaction" value="dislike">
         </form>

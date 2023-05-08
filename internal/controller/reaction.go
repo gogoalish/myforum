@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -32,24 +30,21 @@ func (h *Handler) reaction(w http.ResponseWriter, r *http.Request) {
 		h.errorpage(w, http.StatusBadRequest, nil)
 		return
 	}
-	if object == "comment" {
+	switch object {
+	case "comment":
 		err = h.Service.Comments.React(id, userID, reaction)
 		if err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-		comment, err := h.Service.Comments.GetByID(id)
-		if err != nil && !errors.Is(err, models.ErrNoRecord) {
+	case "post":
+		err = h.Service.Posts.React(id, userID, reaction)
+		if err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
-		http.Redirect(w, r, fmt.Sprintf("/posts/%v", comment.PostID), http.StatusSeeOther)
-		return
+	default:
+		h.errorpage(w, http.StatusInternalServerError, nil)
 	}
-	err = h.Service.Posts.React(id, userID, reaction)
-	if err != nil {
-		h.errorpage(w, http.StatusInternalServerError, err)
-		return
-	}
-	http.Redirect(w, r, fmt.Sprintf("/posts/%v", id), http.StatusSeeOther)
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
