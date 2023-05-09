@@ -211,8 +211,19 @@ func (r *PostRepo) Filter(catID []int) ([]*models.Post, error) {
 			if err != nil {
 				return nil, err
 			}
-			newpost = append(newpost, p)
+			if newpost != nil && IsUnique(p.ID, newpost) {
+				newpost = append(newpost, p)
+			}
 		}
 	}
 	return newpost, nil
+}
+
+func IsUnique(postID int, posts []*models.Post) bool {
+	for _, post := range posts {
+		if postID == post.ID {
+			return false
+		}
+	}
+	return true
 }
