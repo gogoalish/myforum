@@ -9,8 +9,6 @@
 </head>
 
 <body>
-    <a href="/signup">signup</a>
-    <a href="/signin">signin</a>
     {{if .IsAuthorized}}
     <a href="/posts/create">create</a>
     <form action="/logout" method="post">
@@ -18,6 +16,9 @@
             Sign out
         </button>
     </form>
+    {{else}}
+        <a href="/signup">signup</a>
+        <a href="/signin">signin</a>
     {{end}}
     <form method="get" id="filterform">
         <div class="filters">

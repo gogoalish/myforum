@@ -5,6 +5,7 @@ type User struct {
 	Email    string
 	Name     string
 	Password string
+	ConPassword string
 	Token    *string
 	Expires  *string
 }

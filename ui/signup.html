@@ -9,24 +9,30 @@
 
 <body>
     <form action="/signup" method="POST">
-        {{with .ErrMsgs}}
-            {{with .email}}
-            <label>{{.}}</label>
-            {{end}}
-        {{end}}
-        <input type="text" name="email" value="{{if .Content}}{{.Content.Email}}{{end}}">
 
+        <label for="email">E-mail</label><br>
+        <input type="text" name="email" value="{{if .Content}}{{.Content.Email}}{{end}}"><br>
+        {{with .ErrMsgs.email}}
+            <label>{{.}}</label>
+        {{end}}<br>
+        
+        <label for="name">Username</label><br>
+        <input type="text" name="name" value="{{if .Content}}{{.Content.Name}}{{end}}"><br>
         {{with .ErrMsgs.name}}
             <label>{{.}}</label>
-        {{end}}
-        <input type="text" name="name" value="{{if .Content}}{{.Content.Name}}{{end}}">
+        {{end}}<br>
         
-        {{with .ErrMsgs}}
-            {{with .password}}
+        <label for="password">Password</label><br>
+        <input type="text" name="password"><br>
+        {{with .ErrMsgs.pass}}
             <label>{{.}}</label>
-            {{end}}
-        {{end}}
-        <input type="text" name="password">
-        <input type="submit">
+        {{end}}<br>
+
+        <label for="conpassword">Confirm Password</label><br>
+        <input type="text" name="conpassword"><br>
+        {{with .ErrMsgs.conpass}}
+            <label>{{.}}</label>
+        {{end}}<br>
+        <input type="submit" value="SIGN UP">
     </form>
 </body>
