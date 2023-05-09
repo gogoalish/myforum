@@ -13,7 +13,9 @@ const (
 	MsgNameExists         = "Name already exists"
 	MsgInvalidEmail       = "Write correct email"
 	MsgInvalidName        = "Write correct name"
+	MsgInvalidPass        = "Password must contain letters, numbers and must be at least 6 characters."
 	MsgUserNotFound       = "User not found"
+	MsgPassDontMatch      = "The passwords don't match"
 	MsgNotCorrectPassword = "Password is not correct"
 )
 
@@ -24,6 +26,12 @@ func GetErrMsgs(m models.User) map[string]string {
 	}
 	if !isValidName(m.Name) {
 		errmsgs["name"] = MsgInvalidName
+	}
+	if !isValidPassword(m.Password) {
+		errmsgs["pass"] = MsgInvalidPass
+	}
+	if m.Password != m.ConPassword {
+		errmsgs["conpass"] = MsgPassDontMatch
 	}
 	return errmsgs
 }
@@ -41,4 +49,15 @@ func isValidName(name string) bool {
 	usernameConvention := "^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$"
 	re, _ := regexp.Compile(usernameConvention)
 	return re.MatchString(name)
+}
+
+func isValidPassword(pass string) bool {
+	tests := []string{".{6,}", "[a-z]", "[0-9]"}
+	for _, test := range tests {
+		valid, _ := regexp.MatchString(test, pass)
+		if !valid {
+			return false
+		}
+	}
+	return true
 }

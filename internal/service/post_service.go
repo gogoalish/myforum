@@ -17,8 +17,7 @@ type Posts interface {
 	Create(p *models.Post) (int, error)
 	GetById(id int) (*models.Post, error)
 	React(postID, userID int, reaction string) error
-	CountLikes(postID int) (int, error)
-	CountDislikes(postID int) (int, error)
+	GetFiltered(catID []int) ([]*models.Post, error)
 }
 
 func (s *PostService) GetAll() ([]*models.Post, error) {
@@ -28,14 +27,41 @@ func (s *PostService) GetAll() ([]*models.Post, error) {
 		if err != nil {
 			return nil, err
 		}
-		post.LikesCount, err = s.CountLikes(post.ID)
+		post.Likes.Users, err = s.repo.LikesByPostId(post.ID)
 		if err != nil {
 			return nil, err
 		}
-		post.DislikesCount, err = s.CountDislikes(post.ID)
+		post.Likes.Count = len(post.Likes.Users)
+		post.Dislikes.Users, err = s.repo.DislikesByPostId(post.ID)
 		if err != nil {
 			return nil, err
 		}
+		post.Dislikes.Count = len(post.Dislikes.Users)
+		post.Categories, err = s.repo.CategoriesById(post.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return posts, err
+}
+
+func (s *PostService) GetFiltered(catID []int) ([]*models.Post, error) {
+	posts, err := s.repo.Filter(catID)
+	for _, post := range posts {
+		post.CmntCount, err = s.cmntRepo.CountCommentsByPostId(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		post.Likes.Users, err = s.repo.LikesByPostId(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		post.Likes.Count = len(post.Likes.Users)
+		post.Dislikes.Users, err = s.repo.DislikesByPostId(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		post.Dislikes.Count = len(post.Dislikes.Users)
 		post.Categories, err = s.repo.CategoriesById(post.ID)
 		if err != nil {
 			return nil, err
@@ -62,14 +88,16 @@ func (s *PostService) GetById(id int) (*models.Post, error) {
 	if err != nil {
 		return nil, err
 	}
-	post.LikesCount, err = s.CountLikes(post.ID)
+	post.Likes.Users, err = s.repo.LikesByPostId(post.ID)
 	if err != nil {
 		return nil, err
 	}
-	post.DislikesCount, err = s.CountDislikes(post.ID)
+	post.Likes.Count = len(post.Likes.Users)
+	post.Dislikes.Users, err = s.repo.DislikesByPostId(post.ID)
 	if err != nil {
 		return nil, err
 	}
+	post.Dislikes.Count = len(post.Dislikes.Users)
 	post.Categories, err = s.repo.CategoriesById(post.ID)
 	if err != nil {
 		return nil, err
@@ -102,12 +130,12 @@ func (s *PostService) React(postID, userID int, r string) error {
 	return nil
 }
 
-func (s *PostService) CountLikes(postID int) (int, error) {
-	likes, err := s.repo.LikesByPostId(postID)
-	return len(likes), err
-}
+// func (s *PostService) CountLikes(postID int) (int, error) {
+// 	likes, err := s.repo.LikesByPostId(postID)
+// 	return len(likes), err
+// }
 
-func (s *PostService) CountDislikes(postID int) (int, error) {
-	dislikes, err := s.repo.DislikesByPostId(postID)
-	return len(dislikes), err
-}
+// func (s *PostService) CountDislikes(postID int) (int, error) {
+// 	dislikes, err := s.repo.DislikesByPostId(postID)
+// 	return len(dislikes), err
+// }

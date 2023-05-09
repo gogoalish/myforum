@@ -20,12 +20,13 @@ func (h *Handler) signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		form := models.User{
-			Email:    r.PostForm.Get("email"),
-			Name:     r.PostForm.Get("name"),
-			Password: r.PostForm.Get("password"),
+			Email:       r.PostForm.Get("email"),
+			Name:        r.PostForm.Get("name"),
+			Password:    r.PostForm.Get("password"),
+			ConPassword: r.PostForm.Get("conpassword"),
 		}
 		data.Content = form
-		if form.Email == "" || form.Name == "" || form.Password == "" {
+		if form.Email == "" || form.Name == "" || form.Password == "" || form.ConPassword == "" {
 			data.ErrMsgs = validator.GetErrMsgs(form)
 			h.templaterender(w, http.StatusBadRequest, "signup.html", data)
 			return
