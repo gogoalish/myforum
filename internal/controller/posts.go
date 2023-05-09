@@ -21,7 +21,9 @@ func (h *Handler) postcreate(w http.ResponseWriter, r *http.Request) {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
+
 		var catid []int
+
 		for _, value := range r.PostForm["cat"] {
 			number, _ := strconv.Atoi(value)
 			catid = append(catid, number)
@@ -32,7 +34,7 @@ func (h *Handler) postcreate(w http.ResponseWriter, r *http.Request) {
 			Content: r.PostForm.Get("content"),
 			CatID:   catid,
 		}
-		if post.Title == "" && post.Content == "" && len(post.CatID) == 0 {
+		if post.Title == "" && post.Content == "" {
 			h.errorpage(w, http.StatusBadRequest, nil)
 			return
 		}
@@ -93,4 +95,33 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 		h.Service.Comments.Create(comment)
 		http.Redirect(w, r, fmt.Sprintf("/posts/%v", id), http.StatusSeeOther)
 	}
+}
+
+func (h *Handler) postreaction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		h.errorpage(w, http.StatusMethodNotAllowed, nil)
+		return
+	}
+	data := r.Context().Value(ctxKey).(*Data)
+	if data.User == (models.User{}) {
+		h.errorpage(w, http.StatusUnauthorized, nil)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		h.errorpage(w, http.StatusInternalServerError, err)
+		return
+	}
+	reaction := r.PostForm.Get("reaction")
+	userID := data.User.ID
+	postID, err := strconv.Atoi(r.PostForm.Get("post"))
+	if err != nil || (reaction != "like" && reaction != "dislike") {
+		h.errorpage(w, http.StatusBadRequest, nil)
+		return
+	}
+	err = h.Service.Posts.React(postID, userID, reaction)
+	if err != nil {
+		h.errorpage(w, http.StatusInternalServerError, err)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/posts/%v", postID), http.StatusSeeOther)
 }
