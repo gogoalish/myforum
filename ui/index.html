@@ -7,26 +7,45 @@
     <title>Document</title>
 </head>
 <body>
-    <a href="/signup">signup</a>
-    <a href="/signin">signin</a>
     {{if .IsAuthorized}}
-        <a href="/posts/create">create</a>
-        <form action="/logout" method="post">
-            <button>
-                Sign out
-            </button>
-        </form>
+    <a href="/posts/create">create</a>
+    <form action="/logout" method="post">
+        <button>
+            Sign out
+        </button>
+    </form>
+    {{else}}
+        <a href="/signup">signup</a>
+        <a href="/signin">signin</a>
+    {{end}}
+    <form method="get" id="filterform">
+        <div class="filters">
+            <input type="checkbox" id="filter" name="filter" value="1"> General discussions
+            <input type="checkbox" id="filter" name="filter" value="2"> Technical support
+            <input type="checkbox" id="filter" name="filter" value="3"> Programming <br>
+            <input type="checkbox" id="filter" name="filter" value="4"> Networking and security
+            <input type="checkbox" id="filter" name="filter" value="5"> Career and education
+            <input type="checkbox" id="filter" name="filter" value="6"> Mobile and web development <br>
+            <input type="checkbox" id="filter" name="filter" value="7"> Operating systems and software
+            <input type="checkbox" id="filter" name="filter" value="8"> Gaming
+            <input type="checkbox" id="filter" name="filter" value="9"> Industry news and trends
+        </div>
+        <button type="submit" class="filter_button">
+            Submit
+        </button>
+    </form>
+    {{if .IsEmpty}}
+    <label>Your search returned no results...</label>
     {{end}}
     {{ range .Content}}
-        <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.LikesCount}} D - {{.DislikesCount}} {{range .Categories}}{{.}}{{end}}</label>
-        <br>
-        <form action="/reaction"  method="post">
-            <input type="hidden" name="object" value="post">
-            <input type="hidden" name="id" value="{{.ID}}">
-            <input type="submit" name="reaction" value="like">
-            <input type="submit" name="reaction" value="dislike">
-        </form>
+    <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.Likes.Count}}
+        D - {{.Dislikes.Count}} {{range .Categories}}{{.}}{{end}}</label>
+    <br>
+    <form method="post" id="reactform">
+        <input type="hidden" name="post" value="{{.ID}}">
+        <input type="submit" formmethod="post" name="reaction" value="like">
+        <input type="submit" formmethod="post" name="reaction" value="dislike">
+    </form>
     {{ end }}
- 
 </body>
 </html>
