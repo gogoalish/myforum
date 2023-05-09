@@ -25,6 +25,8 @@ type Posts interface {
 	InsertCategory(postID int, catID []int) error
 	CategoriesById(postID int) ([]string, error)
 	Filter(catID []int) ([]*models.Post, error)
+	PostsByUserId(userID int) ([]*models.Post, error)
+	UserLikedPosts(userID int) ([]*models.Post, error)
 }
 
 func (r *PostRepo) InsertPost(p *models.Post) (int, error) {
@@ -228,4 +230,49 @@ func IsUnique(postID int, posts []*models.Post) bool {
 		}
 	}
 	return true
+}
+
+func (r *PostRepo) PostsByUserId(userID int) ([]*models.Post, error) {
+	query := `SELECT *, (
+        SELECT name FROM users WHERE users.id = posts.user_id
+        )
+    FROM posts WHERE user_id = ?`
+	rows, err := r.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	posts := []*models.Post{}
+	for rows.Next() {
+		p := &models.Post{}
+		err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.Creator)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+	return posts, nil
+}
+
+func (r *PostRepo) UserLikedPosts(userID int) ([]*models.Post, error) {
+	query := `SELECT posts.*, (SELECT name FROM users WHERE users.id = posts.user_id)
+    FROM posts
+    INNER JOIN reactions ON reactions.post_id = posts.id
+    WHERE reactions.user_id = ? and reactions.type = "like";
+    `
+	rows, err := r.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	posts := []*models.Post{}
+	for rows.Next() {
+		p := &models.Post{}
+		err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.Creator)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+	return posts, nil
 }

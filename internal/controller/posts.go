@@ -125,3 +125,25 @@ func (h *Handler) postreaction(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, fmt.Sprintf("/posts/%v", postID), http.StatusSeeOther)
 }
+
+func (h *Handler) likedposts(w http.ResponseWriter, r *http.Request) {
+	data := r.Context().Value(ctxKey).(*Data)
+	var err error
+	data.Content, err = h.Service.Posts.GetUserLiked(data.User.ID)
+	if err != nil {
+		h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller - liked - GetUserLiked - %w", err))
+		return
+	}
+	h.templaterender(w, http.StatusOK, "index.html", data)
+}
+
+func (h *Handler) createdposts(w http.ResponseWriter, r *http.Request) {
+	data := r.Context().Value(ctxKey).(*Data)
+	var err error
+	data.Content, err = h.Service.Posts.GetUserCreated(data.User.ID)
+	if err != nil {
+		h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller - liked - GetUserLiked - %w", err))
+		return
+	}
+	h.templaterender(w, http.StatusOK, "index.html", data)
+}
