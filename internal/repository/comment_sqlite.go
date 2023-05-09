@@ -9,9 +9,16 @@ import (
 
 type Comments interface {
 	InsertComment(c *models.Comment) error
+	CommentById(comID int) (*models.Comment, error)
 	CommentsByPostId(postID int) ([]*models.Comment, error)
 	CountCommentsByPostId(postID int) (int, error)
 	RepliesByParent(parentID int) ([]*models.Comment, error)
+	InsertReaction(comID, userID int, reaction string) error
+	ReactionByUserId(comID, userID int) (string, error)
+	RemoveReaction(comID, userID int) error
+	UpdateReaction(comID, userID int, reaction string) error
+	LikesByPostId(comID int) ([]*models.Reaction, error)
+	DislikesByPostId(comID int) ([]*models.Reaction, error)
 }
 
 type CommentRepo struct {
@@ -26,6 +33,19 @@ func (r *CommentRepo) InsertComment(c *models.Comment) error {
 		return err
 	}
 	return nil
+}
+
+func (r *CommentRepo) CommentById(comID int) (*models.Comment, error) {
+	query := `SELECT * FROM comments WHERE id = ?`
+	comment := &models.Comment{}
+	err := r.QueryRow(query, comID).Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.ParentID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, models.ErrNoRecord
+		}
+		return nil, err
+	}
+	return comment, nil
 }
 
 func (r *CommentRepo) CommentsByPostId(postID int) ([]*models.Comment, error) {
@@ -83,4 +103,86 @@ func (r *CommentRepo) CountCommentsByPostId(postID int) (int, error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+func (r *CommentRepo) InsertReaction(comID, userID int, reaction string) error {
+	query := `INSERT INTO reactions (comment_id, user_id, type) VALUES(?, ?, ?)`
+	_, err := r.Exec(query, comID, userID, reaction)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *CommentRepo) ReactionByUserId(comID, userID int) (string, error) {
+	query := `SELECT type FROM reactions WHERE comment_id = ? AND user_id = ?`
+	var reaction string
+	err := r.QueryRow(query, comID, userID).Scan(&reaction)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return reaction, models.ErrNoRecord
+		}
+		return reaction, err
+	}
+	return reaction, nil
+}
+
+func (r *CommentRepo) RemoveReaction(comID, userID int) error {
+	query := "DELETE FROM reactions WHERE comment_id = ? AND user_id = ?"
+	_, err := r.Exec(query, comID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *CommentRepo) UpdateReaction(comID, userID int, reaction string) error {
+	query := `UPDATE reactions
+	SET type = ?
+	WHERE comment_id = ? AND user_id = ?`
+	_, err := r.Exec(query, reaction, comID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *CommentRepo) LikesByPostId(comID int) ([]*models.Reaction, error) {
+	query := `SELECT *
+	FROM reactions WHERE comment_id = ? AND type = "like"`
+	rows, err := r.Query(query, comID)
+	if err != nil {
+		return nil, err
+	}
+	likes := []*models.Reaction{}
+	defer rows.Close()
+	for rows.Next() {
+		r := &models.Reaction{}
+		err := rows.Scan(&r.ID, &r.PostID, &r.CommentID, &r.UserID, &r.Type)
+		if err != nil {
+			return nil, err
+		}
+		likes = append(likes, r)
+	}
+	return likes, err
+}
+
+func (r *CommentRepo) DislikesByPostId(comID int) ([]*models.Reaction, error) {
+	query := `SELECT *
+	FROM reactions WHERE comment_id = ? AND type = "dislike"`
+	rows, err := r.Query(query, comID)
+	if err != nil {
+		return nil, err
+	}
+	dislikes := []*models.Reaction{}
+	defer rows.Close()
+	for rows.Next() {
+		r := &models.Reaction{}
+		err := rows.Scan(&r.ID, &r.PostID, &r.CommentID, &r.UserID, &r.Type)
+		if err != nil {
+			return nil, err
+		}
+		dislikes = append(dislikes, r)
+	}
+	return dislikes, err
 }

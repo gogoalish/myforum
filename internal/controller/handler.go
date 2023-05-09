@@ -31,6 +31,6 @@ func Routes(h *Handler) http.Handler {
 	mux.HandleFunc("/posts/create", h.requireauth(h.postcreate))
 	mux.HandleFunc("/logout", (h.logout))
 	mux.HandleFunc("/posts/", (h.postview))
-	mux.HandleFunc("/post_react", h.requireauth(h.postreaction))
+	mux.HandleFunc("/reaction", h.requireauth(h.reaction))
 	return h.middleware(SecureHeaders(mux))
 }

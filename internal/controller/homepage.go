@@ -54,7 +54,7 @@ func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
 			h.errorpage(w, http.StatusBadRequest, nil)
 			return
 		}
-		err = h.Service.React(postID, userID, reaction)
+		err = h.Service.Posts.React(postID, userID, reaction)
 		if err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
