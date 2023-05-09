@@ -43,10 +43,11 @@
     <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.Likes.Count}}
         D - {{.Dislikes.Count}} {{range .Categories}}{{.}}{{end}}</label>
     <br>
-    <form method="post" id="reactform">
-        <input type="hidden" name="post" value="{{.ID}}">
-        <input type="submit" formmethod="post" name="reaction" value="like">
-        <input type="submit" formmethod="post" name="reaction" value="dislike">
+    <form action="/reaction" method="post">
+        <input type="hidden" name="object" value="post">
+        <input type="hidden" name="id" value="{{.ID}}">
+        <input type="submit" name="reaction" value="like">
+        <input type="submit" name="reaction" value="dislike">
     </form>
     {{ end }}
 
