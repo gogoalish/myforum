@@ -19,3 +19,4 @@ type Post struct {
 	Categories []string
 	CatID      []int
 }
+
