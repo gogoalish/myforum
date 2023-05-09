@@ -20,8 +20,8 @@ type Posts interface {
 	ReactionByUserId(postID, userID int) (string, error)
 	RemoveReaction(postID, userID int) error
 	UpdateReaction(postID, userID int, reaction string) error
-	LikesByPostId(postID int) ([]*models.Reaction, error)
-	DislikesByPostId(postID int) ([]*models.Reaction, error)
+	LikesByPostId(postID int) ([]string, error)
+	DislikesByPostId(postID int) ([]string, error)
 	InsertCategory(postID int, catID []int) error
 	CategoriesById(postID int) ([]string, error)
 	Filter(catID []int) ([]*models.Post, error)
@@ -153,52 +153,54 @@ func (r *PostRepo) UpdateReaction(postID, userID int, reaction string) error {
 	return nil
 }
 
-func (r *PostRepo) LikesByPostId(postID int) ([]*models.Reaction, error) {
-	query := `SELECT *
-	FROM reactions WHERE post_id = ? AND type = "like"`
+func (r *PostRepo) LikesByPostId(postID int) ([]string, error) {
+	query := `SELECT users.name FROM reactions
+	JOIN users ON reactions.user_id=users.id
+	WHERE reactions.post_id=? AND reactions.type="like"`
 	rows, err := r.Query(query, postID)
 	if err != nil {
 		return nil, err
 	}
-	likes := []*models.Reaction{}
+	likes := []string{}
 	defer rows.Close()
 	for rows.Next() {
-		r := &models.Reaction{}
-		err := rows.Scan(&r.ID, &r.PostID, &r.CommentID, &r.UserID, &r.Type)
+		var username string
+		err := rows.Scan(&username)
 		if err != nil {
 			return nil, err
 		}
-		likes = append(likes, r)
+		likes = append(likes, username)
 	}
 	return likes, err
 }
 
-func (r *PostRepo) DislikesByPostId(postID int) ([]*models.Reaction, error) {
-	query := `SELECT *
-	FROM reactions WHERE post_id = ? AND type = "dislike"`
+func (r *PostRepo) DislikesByPostId(postID int) ([]string, error) {
+	query := `SELECT users.name FROM reactions
+	JOIN users ON reactions.user_id=users.id
+	WHERE reactions.post_id=? AND reactions.type="dislike"`
 	rows, err := r.Query(query, postID)
 	if err != nil {
 		return nil, err
 	}
-	dislikes := []*models.Reaction{}
+	dislikes := []string{}
 	defer rows.Close()
 	for rows.Next() {
-		r := &models.Reaction{}
-		err := rows.Scan(&r.ID, &r.PostID, &r.CommentID, &r.UserID, &r.Type)
+		var username string
+		err := rows.Scan(&username)
 		if err != nil {
 			return nil, err
 		}
-		dislikes = append(dislikes, r)
+		dislikes = append(dislikes, username)
 	}
 	return dislikes, err
 }
 
 func (r *PostRepo) Filter(catID []int) ([]*models.Post, error) {
 	newpost := []*models.Post{}
-	query := `select posts.id, posts.user_id, posts.title, posts.content, users.name  from posts 
-	join post_cat on posts.id=post_cat.post_id
-	join users on users.id=posts.user_id
-	where post_cat.cat_id=?;`
+	query := `SELEST posts.id, posts.user_id, posts.title, posts.content, users.name  FROM posts 
+	JOIN post_cat ON posts.id=post_cat.post_id
+	JOIN users ON users.id=posts.user_id
+	WHERE post_cat.cat_id=?;`
 	for _, i := range catID {
 		rows, err := r.Query(query, i)
 		if err != nil {

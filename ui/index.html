@@ -40,8 +40,8 @@
     <label>Your search returned no results...</label>
     {{end}}
     {{ range .Content}}
-    <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.LikesCount}}
-        D - {{.DislikesCount}} {{range .Categories}}{{.}}{{end}}</label>
+    <a href="/posts/{{.ID}}">{{.Title}} - author: {{.Creator}} - comments: {{.CmntCount}}</a><label>L - {{.Likes.Count}}
+        D - {{.Dislikes.Count}} {{range .Categories}}{{.}}{{end}}</label>
     <br>
     <form method="post" id="reactform">
         <input type="hidden" name="post" value="{{.ID}}">
