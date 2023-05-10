@@ -8,24 +8,30 @@ import (
 	"strings"
 
 	"forum/internal/models"
+	"forum/internal/service"
 )
 
 func (h *Handler) postcreate(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		h.templaterender(w, http.StatusOK, "create.html", nil)
+		data := r.Context().Value(ctxKey).(*Data)
+		h.templaterender(w, http.StatusOK, "create.html", data)
 	case http.MethodPost:
 		data := r.Context().Value(ctxKey).(*Data)
 		err := r.ParseForm()
 		if err != nil {
-			h.errorpage(w, http.StatusInternalServerError, err)
+			h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller-postcreate-ParseForm: %w", err))
 			return
 		}
 
 		var catid []int
 
 		for _, value := range r.PostForm["cat"] {
-			number, _ := strconv.Atoi(value)
+			number, err := strconv.Atoi(value)
+			if err != nil {
+				h.errorpage(w, http.StatusBadRequest, err)
+				return
+			}
 			catid = append(catid, number)
 		}
 		post := &models.Post{
@@ -34,7 +40,7 @@ func (h *Handler) postcreate(w http.ResponseWriter, r *http.Request) {
 			Content: r.PostForm.Get("content"),
 			CatID:   catid,
 		}
-		if post.Title == "" && post.Content == "" {
+		if post.Title == "" || post.Content == "" || post.CatID == nil {
 			h.errorpage(w, http.StatusBadRequest, nil)
 			return
 		}
@@ -51,7 +57,7 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 	data := r.Context().Value(ctxKey).(*Data)
 	path := strings.Split(r.URL.Path, "/")
 	id, err := strconv.Atoi(path[len(path)-1])
-	if err != nil {
+	if err != nil || len(path) != 3 || id < 1 {
 		h.errorpage(w, http.StatusNotFound, err)
 		return
 	}
@@ -67,7 +73,7 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		post.Comments, err = h.Service.Comments.Fetch(post.ID)
-		if err != nil && !errors.Is(err, models.ErrNoRecord) {
+		if err != nil {
 			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -75,7 +81,7 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 		h.templaterender(w, http.StatusOK, "post.html", data)
 	case http.MethodPost:
 		if data.User == (models.User{}) {
-			h.templaterender(w, http.StatusUnauthorized, "index.html", nil)
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
 			return
 		}
 		if err := r.ParseForm(); err != nil {
@@ -88,62 +94,45 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 			Content: r.PostForm.Get("content"),
 		}
 		comment.ParentID, err = strconv.Atoi(r.PostForm.Get("parent"))
-		if comment.Content == "" && err != nil {
-			h.errorpage(w, http.StatusBadRequest, err)
+		if comment.Content == "" || (err != nil && r.PostForm.Get("parent") != "") {
+			h.errorpage(w, http.StatusBadRequest, nil)
 			return
 		}
-		h.Service.Comments.Create(comment)
+		err = h.Service.Comments.Create(comment)
+		if err != nil {
+			if errors.Is(err, service.ErrInvalidParent) {
+				h.errorpage(w, http.StatusBadRequest, nil)
+				return
+			}
+			h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("postview-comments.create-%w", err))
+			return
+		}
 		http.Redirect(w, r, fmt.Sprintf("/posts/%v", id), http.StatusSeeOther)
-	}
-}
-
-func (h *Handler) postreaction(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	default:
 		h.errorpage(w, http.StatusMethodNotAllowed, nil)
-		return
 	}
-	data := r.Context().Value(ctxKey).(*Data)
-	if data.User == (models.User{}) {
-		h.errorpage(w, http.StatusUnauthorized, nil)
-		return
-	}
-	if err := r.ParseForm(); err != nil {
-		h.errorpage(w, http.StatusInternalServerError, err)
-		return
-	}
-	reaction := r.PostForm.Get("reaction")
-	userID := data.User.ID
-	postID, err := strconv.Atoi(r.PostForm.Get("post"))
-	if err != nil || (reaction != "like" && reaction != "dislike") {
-		h.errorpage(w, http.StatusBadRequest, nil)
-		return
-	}
-	err = h.Service.Posts.React(postID, userID, reaction)
-	if err != nil {
-		h.errorpage(w, http.StatusInternalServerError, err)
-		return
-	}
-	http.Redirect(w, r, fmt.Sprintf("/posts/%v", postID), http.StatusSeeOther)
 }
 
 func (h *Handler) likedposts(w http.ResponseWriter, r *http.Request) {
 	data := r.Context().Value(ctxKey).(*Data)
-	var err error
-	data.Content, err = h.Service.Posts.GetUserLiked(data.User.ID)
+	posts, err := h.Service.Posts.GetUserLiked(data.User.ID)
 	if err != nil {
-		h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller - liked - GetUserLiked - %w", err))
+		h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller-likedposts-GetUserLiked: %w", err))
 		return
 	}
-	h.templaterender(w, http.StatusOK, "index.html", data)
+	data.IsEmpty = (len(data.Content.([]*models.Post)) == 0)
+	data.Content = posts
+	h.templaterender(w, http.StatusOK, "likedcreated.html", data)
 }
 
 func (h *Handler) createdposts(w http.ResponseWriter, r *http.Request) {
 	data := r.Context().Value(ctxKey).(*Data)
-	var err error
-	data.Content, err = h.Service.Posts.GetUserCreated(data.User.ID)
+	posts, err := h.Service.Posts.GetUserCreated(data.User.ID)
 	if err != nil {
-		h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller - liked - GetUserLiked - %w", err))
+		h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller-createdposts-GetUserLiked: %w", err))
 		return
 	}
-	h.templaterender(w, http.StatusOK, "index.html", data)
+	data.IsEmpty = (len(data.Content.([]*models.Post)) == 0)
+	data.Content = posts
+	h.templaterender(w, http.StatusOK, "likedcreated.html", data)
 }

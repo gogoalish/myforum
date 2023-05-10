@@ -199,7 +199,7 @@ func (r *PostRepo) DislikesByPostId(postID int) ([]string, error) {
 
 func (r *PostRepo) Filter(catID []int) ([]*models.Post, error) {
 	newpost := []*models.Post{}
-	query := `SELEST posts.id, posts.user_id, posts.title, posts.content, users.name  FROM posts 
+	query := `SELECT posts.id, posts.user_id, posts.title, posts.content, users.name  FROM posts 
 	JOIN post_cat ON posts.id=post_cat.post_id
 	JOIN users ON users.id=posts.user_id
 	WHERE post_cat.cat_id=?;`

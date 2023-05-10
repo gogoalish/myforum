@@ -34,14 +34,14 @@ func (h *Handler) middleware(next http.Handler) http.Handler {
 		case nil:
 			data.User, err = h.Service.Users.GetByToken(cookie.Value)
 			if err != nil && !errors.Is(err, models.ErrNoRecord) {
-				h.ErrorLog.Println(err)
+				h.errorpage(w, http.StatusInternalServerError, err)
 				return
 			}
 			if data.User.Token != nil {
 				data.IsAuthorized = true
 			}
 		default:
-			h.ErrorLog.Println(err)
+			h.errorpage(w, http.StatusInternalServerError, err)
 			return
 		}
 		ctx := context.WithValue(r.Context(), ctxKey, data)

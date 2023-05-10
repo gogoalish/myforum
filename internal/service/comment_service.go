@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 
 	"forum/internal/models"
 	"forum/internal/repository"
@@ -17,11 +18,21 @@ type Comments interface {
 	CountDislikes(postID int) (int, error)
 }
 
+var ErrInvalidParent = errors.New("invalid parent")
+
 type CommentService struct {
 	repo repository.Comments
 }
 
 func (s *CommentService) Create(c *models.Comment) error {
+	count, err := s.repo.CountAllComments()
+	if err != nil {
+		return err
+	}
+	if c.ParentID > count {
+		fmt.Println(c.ParentID, count)
+		return ErrInvalidParent
+	}
 	return s.repo.InsertComment(c)
 }
 
@@ -95,11 +106,11 @@ func (s *CommentService) React(comID, userID int, received string) error {
 }
 
 func (s *CommentService) CountLikes(comID int) (int, error) {
-	likes, err := s.repo.LikesByPostId(comID)
+	likes, err := s.repo.LikesByCommentId(comID)
 	return len(likes), err
 }
 
 func (s *CommentService) CountDislikes(comID int) (int, error) {
-	dislikes, err := s.repo.DislikesByPostId(comID)
+	dislikes, err := s.repo.DislikesByCommentId(comID)
 	return len(dislikes), err
 }

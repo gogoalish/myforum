@@ -3,8 +3,6 @@ package controller
 import (
 	"net/http"
 	"strconv"
-
-	"forum/internal/models"
 )
 
 func (h *Handler) reaction(w http.ResponseWriter, r *http.Request) {
@@ -13,10 +11,6 @@ func (h *Handler) reaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := r.Context().Value(ctxKey).(*Data)
-	if data.User == (models.User{}) {
-		h.errorpage(w, http.StatusUnauthorized, nil)
-		return
-	}
 	if err := r.ParseForm(); err != nil {
 		h.errorpage(w, http.StatusInternalServerError, err)
 		return
@@ -44,7 +38,8 @@ func (h *Handler) reaction(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		h.errorpage(w, http.StatusInternalServerError, nil)
+		h.errorpage(w, http.StatusBadRequest, nil)
+		return
 	}
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }

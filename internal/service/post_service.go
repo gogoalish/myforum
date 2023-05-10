@@ -65,40 +65,30 @@ func (s *PostService) GetById(id int) (*models.Post, error) {
 	return post, nil
 }
 
-func (s *PostService) React(postID, userID int, r string) error {
+func (s *PostService) React(postID, userID int, received string) error {
 	reaction, err := s.repo.ReactionByUserId(postID, userID)
 	if err != nil && !errors.Is(err, models.ErrNoRecord) {
 		return err
 	}
 	switch reaction {
 	case "":
-		err = s.repo.InsertReaction(postID, userID, r)
+		err = s.repo.InsertReaction(postID, userID, received)
 		if err != nil {
 			return err
 		}
-	case r:
+	case received:
 		err = s.repo.RemoveReaction(postID, userID)
 		if err != nil {
 			return err
 		}
 	default:
-		err = s.repo.UpdateReaction(postID, userID, r)
+		err = s.repo.UpdateReaction(postID, userID, received)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
 }
-
-// func (s *PostService) CountLikes(postID int) (int, error) {
-// 	likes, err := s.repo.LikesByPostId(postID)
-// 	return len(likes), err
-// }
-
-// func (s *PostService) CountDislikes(postID int) (int, error) {
-// 	dislikes, err := s.repo.DislikesByPostId(postID)
-// 	return len(dislikes), err
-// }
 
 func (s *PostService) fillpost(post *models.Post) (err error) {
 	post.CmntCount, err = s.cmntRepo.CountCommentsByPostId(post.ID)
