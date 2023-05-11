@@ -14,8 +14,6 @@ type Comments interface {
 	Count(postID int) (int, error)
 	GetByID(comID int) (*models.Comment, error)
 	React(comID, userID int, received string) error
-	CountLikes(postID int) (int, error)
-	CountDislikes(postID int) (int, error)
 }
 
 var ErrInvalidParent = errors.New("invalid parent")
@@ -54,14 +52,16 @@ func (s *CommentService) Fetch(postID int) ([]*models.Comment, error) {
 
 func (s *CommentService) GetReplies(comments []*models.Comment) (err error) {
 	for _, comment := range comments {
-		comment.LikesCount, err = s.CountLikes(comment.ID)
+		comment.Likes.Users, err = s.repo.LikesByCommentId(comment.ID)
 		if err != nil {
 			return err
 		}
-		comment.DislikesCount, err = s.CountDislikes(comment.ID)
+		comment.Likes.Count = len(comment.Likes.Users)
+		comment.Dislikes.Users, err = s.repo.DislikesByCommentId(comment.ID)
 		if err != nil {
 			return err
 		}
+		comment.Dislikes.Count = len(comment.Dislikes.Users)
 		comment.Replies, err = s.repo.RepliesByParent(comment.ID)
 		if err != nil && !errors.Is(err, models.ErrNoRecord) {
 			return err
@@ -103,14 +103,4 @@ func (s *CommentService) React(comID, userID int, received string) error {
 		}
 	}
 	return nil
-}
-
-func (s *CommentService) CountLikes(comID int) (int, error) {
-	likes, err := s.repo.LikesByCommentId(comID)
-	return len(likes), err
-}
-
-func (s *CommentService) CountDislikes(comID int) (int, error) {
-	dislikes, err := s.repo.DislikesByCommentId(comID)
-	return len(dislikes), err
 }

@@ -17,8 +17,8 @@ type Comments interface {
 	ReactionByUserId(comID, userID int) (string, error)
 	RemoveReaction(comID, userID int) error
 	UpdateReaction(comID, userID int, reaction string) error
-	LikesByCommentId(comID int) ([]*models.Reaction, error)
-	DislikesByCommentId(comID int) ([]*models.Reaction, error)
+	LikesByCommentId(comID int) ([]string, error)
+	DislikesByCommentId(comID int) ([]string, error)
 	CountAllComments() (int, error)
 }
 
@@ -145,42 +145,44 @@ func (r *CommentRepo) UpdateReaction(comID, userID int, reaction string) error {
 	return nil
 }
 
-func (r *CommentRepo) LikesByCommentId(comID int) ([]*models.Reaction, error) {
-	query := `SELECT *
-	FROM reactions WHERE comment_id = ? AND type = "like"`
+func (r *CommentRepo) LikesByCommentId(comID int) ([]string, error) {
+	query := `SELECT users.name FROM reactions
+	JOIN users ON reactions.user_id=users.id
+	WHERE reactions.comment_id=? AND reactions.type="like"`
 	rows, err := r.Query(query, comID)
 	if err != nil {
 		return nil, err
 	}
-	likes := []*models.Reaction{}
+	likes := []string{}
 	defer rows.Close()
 	for rows.Next() {
-		r := &models.Reaction{}
-		err := rows.Scan(&r.ID, &r.PostID, &r.CommentID, &r.UserID, &r.Type)
+		var username string
+		err := rows.Scan(&username)
 		if err != nil {
 			return nil, err
 		}
-		likes = append(likes, r)
+		likes = append(likes, username)
 	}
 	return likes, err
 }
 
-func (r *CommentRepo) DislikesByCommentId(comID int) ([]*models.Reaction, error) {
-	query := `SELECT *
-	FROM reactions WHERE comment_id = ? AND type = "dislike"`
+func (r *CommentRepo) DislikesByCommentId(comID int) ([]string, error) {
+	query := `SELECT users.name FROM reactions
+	JOIN users ON reactions.user_id=users.id
+	WHERE reactions.comment_id=? AND reactions.type="dislike"`
 	rows, err := r.Query(query, comID)
 	if err != nil {
 		return nil, err
 	}
-	dislikes := []*models.Reaction{}
+	dislikes := []string{}
 	defer rows.Close()
 	for rows.Next() {
-		r := &models.Reaction{}
-		err := rows.Scan(&r.ID, &r.PostID, &r.CommentID, &r.UserID, &r.Type)
+		var username string
+		err := rows.Scan(&username)
 		if err != nil {
 			return nil, err
 		}
-		dislikes = append(dislikes, r)
+		dislikes = append(dislikes, username)
 	}
 	return dislikes, err
 }
