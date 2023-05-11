@@ -16,8 +16,6 @@ type Comments interface {
 	React(comID, userID int, received string) error
 }
 
-var ErrInvalidParent = errors.New("invalid parent")
-
 type CommentService struct {
 	repo repository.Comments
 }
@@ -29,7 +27,7 @@ func (s *CommentService) Create(c *models.Comment) error {
 	}
 	if c.ParentID > count {
 		fmt.Println(c.ParentID, count)
-		return ErrInvalidParent
+		return models.ErrInvalidParent
 	}
 	return s.repo.InsertComment(c)
 }

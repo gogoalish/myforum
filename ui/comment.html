@@ -1,4 +1,5 @@
 {{ define "comment" }}
+<div class="first">
     {{range .}}
         <p>{{.Creator}} - {{.Content}}</p>
         <form action="/reaction"  method="post">
@@ -23,16 +24,23 @@
                 {{end}}
             </ul>
         </details>
-        <form class="replyform" method="post">
-            <input type="hidden" name = "parent" value="{{.ID}}">
-            <input type="text" name="content">
-            <input type="submit" value="create">
-        </form>
+        <details class="replyform">
+            <summary>reply</summary>
+            <form method="post">
+                <input type="hidden" name = "parent" value="{{.ID}}">
+                <input type="text" name="content" required>
+                <input type="submit" value="create">
+            </form>
+        </details>
         <br>
-        {{if gt (len .Replies) 0}}
-            {{template "comment" .Replies}}
+        <details>
+            <summary>show replies</summary>
+                {{with .Replies}}
+                    {{template "comment" .}}
+                {{end}}
+        </details>
         {{end}}
-    {{end}}
+    </div>
 {{end}}
 
 {{ template "comment" .}}

@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"forum/internal/models"
-	"forum/internal/service"
 )
 
 func (h *Handler) postcreate(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +99,7 @@ func (h *Handler) postview(w http.ResponseWriter, r *http.Request) {
 		}
 		err = h.Service.Comments.Create(comment)
 		if err != nil {
-			if errors.Is(err, service.ErrInvalidParent) {
+			if errors.Is(err, models.ErrInvalidParent) {
 				h.errorpage(w, http.StatusBadRequest, nil)
 				return
 			}
@@ -120,7 +119,7 @@ func (h *Handler) likedposts(w http.ResponseWriter, r *http.Request) {
 		h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller-likedposts-GetUserLiked: %w", err))
 		return
 	}
-	data.IsEmpty = (len(data.Content.([]*models.Post)) == 0)
+	data.IsEmpty = (len(posts) == 0)
 	data.Content = posts
 	h.templaterender(w, http.StatusOK, "likedcreated.html", data)
 }
@@ -132,7 +131,7 @@ func (h *Handler) createdposts(w http.ResponseWriter, r *http.Request) {
 		h.errorpage(w, http.StatusInternalServerError, fmt.Errorf("controller-createdposts-GetUserLiked: %w", err))
 		return
 	}
-	data.IsEmpty = (len(data.Content.([]*models.Post)) == 0)
+	data.IsEmpty = (len(posts) == 0)
 	data.Content = posts
 	h.templaterender(w, http.StatusOK, "likedcreated.html", data)
 }

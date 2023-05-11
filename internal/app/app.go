@@ -17,14 +17,16 @@ const PORT = ":8080"
 func Run() {
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	DB, _ := sql.Open("sqlite3", "forum.db")
-	defer DB.Close()
-
-	handler, err := controller.NewHandler(errorLog, DB)
+	DB, err := sql.Open("sqlite3", "forum.db")
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	err = repository.Create(DB)
+	defer DB.Close()
+	err = repository.CreateTables(DB)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	handler, err := controller.NewHandler(errorLog, DB)
 	if err != nil {
 		errorLog.Fatal(err)
 	}

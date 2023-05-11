@@ -17,7 +17,11 @@ func (h *Handler) homepage(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	var catID []int
 	for _, value := range query["filter"] {
-		number, _ := strconv.Atoi(value)
+		number, err := strconv.Atoi(value)
+		if err != nil {
+			h.errorpage(w, http.StatusBadRequest, nil)
+			return
+		}
 		if number > 0 {
 			catID = append(catID, number)
 		}

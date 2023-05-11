@@ -2,7 +2,7 @@ package repository
 
 import "database/sql"
 
-func Create(DB *sql.DB) error {
+func CreateTables(DB *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			email TEXT NOT NULL UNIQUE,

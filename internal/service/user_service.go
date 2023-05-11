@@ -30,14 +30,14 @@ func (u *UserService) SignUp(m models.User) error {
 	}
 	user, err = u.repo.UserByName(m.Name)
 	if err != nil && !errors.Is(err, models.ErrNoRecord) {
-		return fmt.Errorf("userservice - signup #2: %w", err)
+		return err
 	}
 	if user.Name == m.Name {
 		return models.ErrDuplicateName
 	}
 	m.Password, err = hasher.Encrypt(m.Password)
 	if err != nil {
-		return fmt.Errorf("userservice - signup #3: %w", err)
+		return err
 	}
 	u.repo.InsertUser(m)
 	return nil
@@ -52,10 +52,10 @@ func (s *UserService) SignIn(login, password string) (models.User, error) {
 			if errors.Is(err, models.ErrNoRecord) {
 				return m, err
 			}
-			return m, fmt.Errorf("userservice - signin #1: %w", err)
+			return m, err
 		}
 	case err != nil:
-		return m, fmt.Errorf("userservice - signin #2: %w", err)
+		return m, err
 	}
 
 	if !hasher.CorrectPassword(m.Password, password) {
@@ -64,11 +64,11 @@ func (s *UserService) SignIn(login, password string) (models.User, error) {
 
 	m.Token, err = hasher.GenerateToken()
 	if err != nil {
-		return m, fmt.Errorf("userservice - signin #3: %w", err)
+		return m, err
 	}
 	err = s.repo.SetToken(m.ID, *m.Token)
 	if err != nil {
-		return m, fmt.Errorf("userservice - signin #4: %w", err)
+		return m, err
 	}
 	return m, nil
 }

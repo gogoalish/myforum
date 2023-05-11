@@ -69,7 +69,7 @@ func (h *Handler) signin(w http.ResponseWriter, r *http.Request) {
 		login, password := r.PostForm.Get("login"), r.PostForm.Get("password")
 		data.Content = login
 		if login == "" || password == "" {
-			h.templaterender(w, http.StatusBadRequest, "signin.html", data)
+			h.errorpage(w, http.StatusBadRequest, nil)
 			return
 		}
 		user, err := h.Service.SignIn(login, password)
